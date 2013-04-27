@@ -1,0 +1,6 @@
+*obj
+Debug
+filtering.*
+*vcxpro
+ipch/
+filtering/Debug
