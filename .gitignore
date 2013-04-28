@@ -5,3 +5,5 @@ filtering.*
 ipch/
 filtering/Debug
 *asv
+*jpeg
+*jpg

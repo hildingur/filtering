@@ -1,6 +1,10 @@
 function [ x_hat_minus, x_hat, p, p_minus, K ] = simple_kalman_filter( z, x_init, init_p, A, B, u, Q, R)
 % Simple kalman filter, works to estimate state variable x in a the
 % following SDE:
+%
+% Algo is from here:
+% http://www.cs.unc.edu/~welch/media/pdf/kalman_intro.pdf
+%
 % x[k] = A * x[k-1] + B * u[k-1] + w[k-1]
 % z[k] = H * x[k] + v[k]
 % Where w[k] ~ N(0, Q) and v[k] ~ N(0, R)
