@@ -7,7 +7,7 @@
 // u[] is the set of means of observation errors
 // v[] is the set of variances of observation errors
 // estimates[] are the estimated observations from the filter
-void estimate_extended_kalman_parameters_1_dim(
+void estimate_extended_kalman_parameters_1_dim (
 	double *log_stock_prices,
 	double muS,
 	int n_stock_prices,
