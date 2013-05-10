@@ -20,58 +20,20 @@ double muS = 0.0;
 int call_counter = 0;
 
 int main() {
-	/*
-	const int lines = 1000;
-	double z[lines];
-	read_lines("C:\\Users\\hildingur\\Dropbox\\vol_filter (2)\\z.csv", z);
-	for(int i = 0; i < lines; i++)
-		cout<<z[i]<<endl;
-	return 0;
-
-	void powell(Vec_IO_DP &p, Mat_IO_DP &xi, const DP ftol, int &iter,
-	DP &fret, DP func(Vec_I_DP &));
-	*/
-	/*
-	double a[1] = {100.00};
-	double unit[1] = {1};
-	Vec_IO_DP startingPoint(a, 1);
-	Mat_IO_DP unitVector(unit, 1, 1);
-	DP ftol = 1.00e-6;
-	int iter;
-	DP fret;
-	NR::powell(startingPoint, unitVector, ftol, iter, fret, minimize_target);
-
-	cout<<startingPoint[0]<<endl;
-	cout<<"All good"<<endl;
-	*/
-
+	
 	double z[n_stock_prices];
 	read_lines("C:\\Users\\hildingur\\Dropbox\\vol_filter (2)\\ibm_trimmed.csv", z);
 	for(int i = 0; i < n_stock_prices; i++) {
 		log_stock_prices[i] = log(z[i]);
-		//cout<<z[i]<<" log = "<<log_stock_prices[i]<<endl;
 	}
 
-	/*
-	omega, 
-		theta, 
-		xi, 
-		rho, 
-	*/
-
+	//Initializing the starting point
 	double a[4] = {0.2, 1.00, 0.5, -0.2};
 	Vec_IO_DP starting_point(a, 4);
 	
-	/*
-	double unit[16] = {1, 1, 1, 1, 
-		               0, 1, 0, 0,
-	                   0, 0, 1, 0,
-	                   0, 0, 0, 1};
-
-	*/
+	//Initializing the identity matrix, don't know a more elegant
+	//way to do it using the Numerical recipies api.
 	Mat_IO_DP identity_matrix(4, 4);
-	
-
 	for(int i = 0; i < 4; i++) {
 		for(int j = 0; j < 4; j++) {
 			if(i==j) identity_matrix[i][j] = 1.00;
@@ -95,25 +57,12 @@ int main() {
 	cout<<"Parameters are "<<" omega = "<<omega
 			<<" theta = "<<theta
 			<<" xi = "<<xi
-			<<" rho = "<<rho;
+			<<" rho = "<<rho<<endl<<endl;
 
+	cout<<"Press any key to continue"<<endl;
 	cin.get();
 	return 0;
 }
-
-/*
-void estimate_extended_kalman_parameters_1_dim(
-	double *log_stock_prices,
-	double muS,
-	int n_stock_prices,
-	double omega,
-	double theta,
-	double xi,
-	double rho,
-	double *u,
-	double *v,
-	double *estimates)
-	*/
 
 DP minimize_target_extended_kalman_parameters_1_dim(Vec_I_DP & input) {
 	double omega = input[0];
@@ -136,6 +85,7 @@ DP minimize_target_extended_kalman_parameters_1_dim(Vec_I_DP & input) {
 	for(int i1 = 0; i1 < n_stock_prices; i1++)
 		sum+=(log(v[i1])+u[i1]*u[i1]/v[i1]);
 
+	//Printing out a status message to see whats going on
 	if(call_counter++ % 100 == 0)
 		cout<<" call_counter = "<<call_counter 
 			<<" omega = "<<omega
