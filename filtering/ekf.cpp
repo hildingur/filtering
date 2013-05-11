@@ -2,31 +2,74 @@
 #include <fstream>
 #include <string>
 #include <stdlib.h>
+#include <string>
 #include "./recipes/nr.h"
 #include "filters.h"
+#include <vector>
 
 using namespace std;
 
-void read_lines(char * fname, double * out);
+void read_lines(string& fname, vector<double>& out);
 DP minimize_target(Vec_I_DP & input);
 DP minimize_target_w_x_y_z_square(Vec_I_DP & input);
 
 DP minimize_target_extended_kalman_parameters_1_dim(Vec_I_DP & input);
 
-const int n_stock_prices = 4617;
-double log_stock_prices[n_stock_prices], u[n_stock_prices], v[n_stock_prices], estimates[n_stock_prices + 1];
+int n_stock_prices = NULL;
+//double log_stock_prices[n_stock_prices], u[n_stock_prices], v[n_stock_prices], estimates[n_stock_prices + 1];
+double *log_stock_prices, *u, *v, *estimates;
 //double muS = 0.687;
 double muS = 0.0;
 int call_counter = 0;
 
-int main() {
-	//TODO: Make the filename a command line arg, make the output a 
-	//Command Line Argument and read the input into a vector
-	//changed
-	double z[n_stock_prices];
-	read_lines("C:\\Users\\hildingur\\Dropbox\\vol_filter (2)\\ibm_trimmed.csv", z);
-	for(int i = 0; i < n_stock_prices; i++) {
-		log_stock_prices[i] = log(z[i]);
+string input_file_name, output_file_name = "";
+
+
+int main(int argc, char** argv) {
+
+	vector<double> prices;
+
+	string usage = "syntax is program_name <input_file> <output_file>. " 
+		"The input file should be a 1 columned csv price file with a header, the output file is optional";
+	//Parse the command line args.
+	try {
+		cout<<"argc = "<<argc<<endl;
+
+		if(argc!=2 && argc!=3) 
+			throw usage;
+		input_file_name = string(argv[1]);
+		if(argc!=1)
+			output_file_name = string(argv[2]);
+		
+		cout<<"input file is "<<input_file_name<<endl;
+
+		if(!output_file_name.empty())
+			cout<<"output_file is "<<output_file_name<<endl;
+		
+		ifstream ifile(input_file_name.c_str());
+		if(!ifile)
+			throw "could not open input file " + input_file_name;
+
+		ifile.close();
+	} catch (string exception) {
+		cout<<exception<<endl;
+		cout<<"please hit a key to continue..."<<endl;
+		cin.get();
+		exit(-1);
+	}
+	
+	read_lines(input_file_name, prices);
+	cout<<"Found "<<prices.size()<<" prices"<<endl;
+	
+	n_stock_prices = prices.size();
+
+	log_stock_prices = new double[n_stock_prices];
+	u = new double[n_stock_prices];
+	v = new double[n_stock_prices];
+	estimates = new double[n_stock_prices + 1];
+
+	for(int i = 0; i < prices.size(); i++) {
+		log_stock_prices[i] = log(prices[i]);
 	}
 
 	//Initializing the starting point
@@ -61,6 +104,8 @@ int main() {
 			<<" xi = "<<xi
 			<<" rho = "<<rho<<endl<<endl;
 
+
+	delete log_stock_prices, u, v, estimates;
 	cout<<"Press any key to continue"<<endl;
 	cin.get();
 	return 0;
@@ -119,8 +164,8 @@ DP minimize_target_w_x_y_z_square(Vec_I_DP & input) {
 	return out;
 }
 
-void read_lines(char * fname, double * out) {
-	std::ifstream fhandle(fname);
+void read_lines(string& fname, vector<double>& out) {
+	std::ifstream fhandle(fname.c_str());
 	char line[1000];
 	bool first = true;
 	int index = 0;
@@ -132,7 +177,8 @@ void read_lines(char * fname, double * out) {
 			continue;
 		}
 		if(!fhandle.eof())
-			out[index++] = atof(line);
+			out.push_back(atof(line));
+
 	} while(!fhandle.eof());
 
 }
