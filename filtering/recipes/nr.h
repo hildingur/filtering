@@ -2,6 +2,8 @@
 #define _NR_H_
 #include <fstream>
 #include <complex>
+ #include <cstdlib>
+
 #include "nrutil.h"
 #include "nrtypes.h"
 using namespace std;
