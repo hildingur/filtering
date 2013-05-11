@@ -110,7 +110,7 @@ int main(int argc, char** argv) {
 	if(!output_file_name.empty())
 		output_file.close();
 
-	delete log_stock_prices, u, v, estimates;
+	delete[] log_stock_prices, u, v, estimates;
 	cout<<"Press any key to continue"<<endl;
 	cin.get();
 	return 0;
