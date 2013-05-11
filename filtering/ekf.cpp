@@ -54,7 +54,7 @@ int main(int argc, char** argv) {
 			throw "could not open input file " + input_file_name;
 
 		ifile.close();
-	} catch (string exception) {
+	} catch (string & exception) {
 		cout<<exception<<endl;
 		cout<<"please hit a key to continue..."<<endl;
 		cin.get();
