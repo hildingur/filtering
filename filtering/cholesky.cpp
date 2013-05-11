@@ -10,8 +10,7 @@ using namespace std;
 int sqrt_matrix(double** pa, double** proda, int& N)
 {
        
-        int i,j,k;
-        DP sum;
+        int i,j;
         Vec_DP p(N),x(N);
         //Mat_DP a(*pa,N,N), atest(N,N), chol(N,N);
 		Mat_DP a(N,N), atest(N,N), chol(N,N);
