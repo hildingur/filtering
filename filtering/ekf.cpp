@@ -23,6 +23,7 @@ double muS = 0.0;
 int call_counter = 0;
 
 string input_file_name, output_file_name = "";
+ofstream output_file;
 
 
 int main(int argc, char** argv) {
@@ -43,8 +44,10 @@ int main(int argc, char** argv) {
 		
 		cout<<"input file is "<<input_file_name<<endl;
 
-		if(!output_file_name.empty())
+		if(!output_file_name.empty()) {
 			cout<<"output_file is "<<output_file_name<<endl;
+			output_file.open(output_file_name.c_str());
+		}
 		
 		ifstream ifile(input_file_name.c_str());
 		if(!ifile)
@@ -104,6 +107,8 @@ int main(int argc, char** argv) {
 			<<" xi = "<<xi
 			<<" rho = "<<rho<<endl<<endl;
 
+	if(!output_file_name.empty())
+		output_file.close();
 
 	delete log_stock_prices, u, v, estimates;
 	cout<<"Press any key to continue"<<endl;
@@ -131,6 +136,23 @@ DP minimize_target_extended_kalman_parameters_1_dim(Vec_I_DP & input) {
 	double sum = 0;
 	for(int i1 = 0; i1 < n_stock_prices; i1++)
 		sum+=(log(v[i1])+u[i1]*u[i1]/v[i1]);
+
+	//print the header first time around
+	if(call_counter==0 && !output_file_name.empty()) {
+		output_file<<"iteration"<<","
+			<<"omega"<<","
+			<<"theta"<<","
+			<<"xi"<<","
+			<<"rho"<<","
+			<<"likelihood"<<endl;
+	}
+
+	output_file<<call_counter<<","
+			<<omega<<","
+			<<theta<<","
+			<<xi<<","
+			<<rho<<","
+			<<sum<<endl;
 
 	//Printing out a status message to see whats going on
 	if(call_counter++ % 100 == 0)
