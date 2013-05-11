@@ -1,4 +1,5 @@
 #include <math.h>
+#include "cholesky.h"
 
 /**
    This file contains the function parameters for model parameter estimators 
@@ -138,7 +139,7 @@ void estimate_unscented_kalman_parameters_1_dim(double *log_stock_prices,
               }
             }
         }
-      ret = sqrt_matrix(Pa,proda,na);
+      ret = sqrt_matrix(Pa, proda, na);
       for (i3=1;i3<(1+na);i3++)
         {
           for (i1=0;i1<na;i1++)
@@ -208,6 +209,8 @@ void estimate_unscented_kalman_parameters_1_dim(double *log_stock_prices,
   delete [] Pa;
   delete [] proda;
 }
+
+/*
 // the routine sqrt_matrix() can be constructed via the Cholesly decomposition
 // also available as choldc() in the Numerical Recipes in C
 // log_stock_prices  are the log of stock prices
@@ -257,7 +260,7 @@ void estimate_particle_extended_kalman_parameters_1_dim(
       x1_sum=0.0;
       for (i2=0; i2<M; i2++)
         {
-          /* EKF for the proposal distribution */
+          // EKF for the proposal distribution 
           if (x[i2]<0) x[i2]=0.00001;
           x1[i2] = x[i2] + ( omega-rho*xi*muS - (theta-
                                                  0.5*rho*xi) * x[i2]) * delt + rho*xi*
@@ -272,10 +275,10 @@ void estimate_particle_extended_kalman_parameters_1_dim(
                                           + (muS-0.5*x1[i2])*delt));
           x1_sum+= x1[i2];
           P[i2]=(1.0-K[i2]*H)*P1[i2];
-          /* sample */
+          // sample 
           xx[i2] = x2[i2]+sqrt(P[i2])*Normal_inverse(ran2(&idum));
           if (xx[i2]<0) xx[i2]=0.00001;
-          /* calculate weights */
+          // calculate weights 
           m = x2[i2];
           s = sqrt(P[i2]);
           q = 0.39894228/s * exp( - 0.5* (xx[i2] - m)*
@@ -294,10 +297,10 @@ void estimate_particle_extended_kalman_parameters_1_dim(
       *ll += log(l);
       estimates[i1+1]= log_stock_prices[i1] +
         (muS-0.5*x1_sum/M)*delt;
-      /* normalize weights */
+      // normalize weights 
       for (i2=0; i2<M; i2++)
         w[i2] /= l;
-      /* resample and reset weights */
+      // resample and reset weights 
       c[0]=0;
       for (i2=1; i2<M; i2++)
         c[i2] = c[i2-1] + w[i2];
@@ -393,7 +396,7 @@ void estimate_particle_unscented_kalman_parameters_1_dim(
       estimates[i1+1]=0.0;
       for (i2=0; i2<M; i2++)
         {
-          /* UKF for the proposal distribution */
+          // UKF for the proposal distribution 
           for (i3=0;i3<na;i3++)
             {
               Xa[i2][i3][0]= xa[i2][i3];
@@ -477,11 +480,11 @@ void estimate_particle_unscented_kalman_parameters_1_dim(
           if (x2[i2]<0) x2[i2]=0.0001;
           Pa[i2][1][0]= Pa[i2][0][1]= Pa[i2][1][2]
             =Pa[i2][2][1]= Pa[i2][0][2]=Pa[i2][2][0]=[0];
-          /* sample */
+          // sample 
           xx[i2] = x2[i2] + sqrt(P[i2])*
             Normal_inverse(ran2(&idum));
           if (xx[i2]<0) xx[i2]=0.00001;
-          /* calculate weights */
+          // calculate weights 
           m = x2[i2];
           s = sqrt(P[i2]);
           q = 0.39894228/s * exp( - 0.5* (xx[i2] - m)*
@@ -502,10 +505,10 @@ void estimate_particle_unscented_kalman_parameters_1_dim(
           l += w[i2];
         }
       *ll += log(l);
-      /* normalize weights */
+      // normalize weights 
       for (i2=0; i2<M; i2++)
         w[i2] /= l;
-      /* resample and reset weights */
+      // resample and reset weights 
       c[0]=0;
       for (i2=1; i2<M; i2++)
         c[i2] = c[i2-1] + w[i2];
@@ -537,3 +540,4 @@ void estimate_particle_unscented_kalman_parameters_1_dim(
   delete [] Pa;
   delete [] proda;
 }
+*/

@@ -51,6 +51,7 @@ void estimate_unscented_kalman_parameters_1_dim(
                                                 double *v,
                                                 double *estimates);
 
+/*
 void estimate_particle_extended_kalman_parameters_1_dim(
                                                         double *log_stock_prices,
                                                         double muS,
@@ -75,5 +76,6 @@ void estimate_particle_unscented_kalman_parameters_1_dim(
                                                          double rho,
                                                          double *ll,
                                                          double *estimates);
+														 */
 
 #endif
