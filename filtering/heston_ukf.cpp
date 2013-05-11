@@ -13,7 +13,7 @@ void read_lines(string& fname, vector<double>& out);
 DP minimize_target(Vec_I_DP & input);
 DP minimize_target_w_x_y_z_square(Vec_I_DP & input);
 
-DP minimize_target_extended_kalman_parameters_1_dim(Vec_I_DP & input);
+DP minimize_target_unscented_kalman_parameters_1_dim(Vec_I_DP & input);
 
 int n_stock_prices = NULL;
 //double log_stock_prices[n_stock_prices], u[n_stock_prices], v[n_stock_prices], estimates[n_stock_prices + 1];
@@ -93,7 +93,7 @@ int main(int argc, char** argv) {
 	int iter;
 	DP fret;
 
-	NR::powell(starting_point, identity_matrix, ftol, iter, fret, minimize_target_extended_kalman_parameters_1_dim);
+	NR::powell(starting_point, identity_matrix, ftol, iter, fret, minimize_target_unscented_kalman_parameters_1_dim);
 	
 	cout<<"Ran succesfully in "<<call_counter<<" iterations with return value "<<fret<<endl;
 
@@ -116,13 +116,13 @@ int main(int argc, char** argv) {
 	return 0;
 }
 
-DP minimize_target_extended_kalman_parameters_1_dim(Vec_I_DP & input) {
+DP minimize_target_unscented_kalman_parameters_1_dim(Vec_I_DP & input) {
 	double omega = input[0];
 	double theta = input[1];
 	double xi = input[2];
 	double rho = input[3];
 
-	estimate_extended_kalman_parameters_1_dim(log_stock_prices, 
+	estimate_unscented_kalman_parameters_1_dim(log_stock_prices,
 		muS, 
 		n_stock_prices, 
 		omega, 
