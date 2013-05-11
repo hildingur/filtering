@@ -1,6 +1,5 @@
 #include <iostream>
 #include <iomanip>
-#include <random>
 
 #include "recipes/nr.h"
 using namespace std;
