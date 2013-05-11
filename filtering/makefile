@@ -1,13 +1,13 @@
 all: ekf ukf
 
 ekf: dir heston_ekf.o filters.o powell.o f1dim.o linmin.o mnbrak.o brent.o cholesky.o
-	g++ bin/heston_ekf.o bin/filters.o bin/powell.o bin/f1dim.o bin/linmin.o bin/mnbrak.o bin/brent.o bin/cholesky.o -o bin/ekf_main
+	g++ bin/heston_ekf.o bin/filters.o bin/powell.o bin/f1dim.o bin/linmin.o bin/mnbrak.o bin/brent.o bin/cholesky.o bin/choldc.o -o bin/ekf_main
 
 heston_ekf.o: heston_ekf.cpp
 	g++ -c heston_ekf.cpp -o bin/heston_ekf.o
 
-ukf: dir bin/heston_ukf.o bin/filters.o bin/powell.o bin/f1dim.o bin/linmin.o bin/mnbrak.o bin/brent.o bin/cholesky.o
-	g++ bin/heston_ukf.o bin/filters.o bin/powell.o bin/f1dim.o bin/linmin.o bin/mnbrak.o bin/brent.o bin/cholesky.o -o bin/ukf_main
+ukf: dir heston_ukf.o filters.o powell.o f1dim.o linmin.o mnbrak.o brent.o cholesky.o
+	g++ bin/heston_ukf.o bin/filters.o bin/powell.o bin/f1dim.o bin/linmin.o bin/mnbrak.o bin/brent.o bin/cholesky.o bin/choldc.o -o bin/ukf_main
 
 heston_ukf.o: heston_ukf.cpp
 	g++ -c heston_ukf.cpp -o bin/heston_ukf.o
@@ -30,8 +30,11 @@ mnbrak.o: recipes/mnbrak.cpp
 brent.o: recipes/brent.cpp
 	g++ -c recipes/brent.cpp -o bin/brent.o
 
-cholesky.o: cholesky.cpp recipes/choldc.cpp
-	g++ -o bin/cholesky.o cholesky.cpp recipes/choldc.cpp
+cholesky.o: cholesky.cpp choldc.o
+	g++ -c cholesky.cpp -o bin/cholesky.o 
+
+choldc.o: recipes/choldc.cpp
+	g++ -c recipes/choldc.cpp -o bin/choldc.o
 
 
 dir:
