@@ -20,7 +20,9 @@ double muS = 0.0;
 int call_counter = 0;
 
 int main() {
-	
+	//TODO: Make the filename a command line arg, make the output a 
+	//Command Line Argument and read the input into a vector
+
 	double z[n_stock_prices];
 	read_lines("C:\\Users\\hildingur\\Dropbox\\vol_filter (2)\\ibm_trimmed.csv", z);
 	for(int i = 0; i < n_stock_prices; i++) {
@@ -41,7 +43,7 @@ int main() {
 		}
 	}
 	
-	DP ftol = 1.00e-3;
+	DP ftol = 1.00e-6;
 	int iter;
 	DP fret;
 
