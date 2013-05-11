@@ -1,6 +1,6 @@
 all: ekf
 
-ekf: ekf.o filters.o powell.o f1dim.o linmin.o mnbrak.o brent.o
+ekf: dir ekf.o filters.o powell.o f1dim.o linmin.o mnbrak.o brent.o
 	g++ bin/ekf.o bin/filters.o bin/powell.o bin/f1dim.o bin/linmin.o bin/mnbrak.o bin/brent.o -o bin/ekf_main
 
 ekf.o: ekf.cpp
@@ -24,7 +24,8 @@ mnbrak.o: recipes/mnbrak.cpp
 brent.o: recipes/brent.cpp
 	g++ -c recipes/brent.cpp -o bin/brent.o
 
-
+dir:
+	mkdir -p bin
 clean: 
 	rm -v ./bin/*
 #ekf:
