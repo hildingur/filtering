@@ -1,5 +1,5 @@
 clear;
-heston = csvread('../io/out.csv', 1);
+heston = csvread('../io/ibm_heston_ukf_params.csv', 1);
 
 
 subplot(2, 2, 1);
