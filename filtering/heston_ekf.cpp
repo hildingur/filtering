@@ -34,8 +34,7 @@ int main(int argc, char** argv) {
 		"The input file should be a 1 columned csv price file with a header, the output file is optional";
 	//Parse the command line args.
 	try {
-		cout<<"argc = "<<argc<<endl;
-
+		
 		if(argc!=2 && argc!=3) 
 			throw usage;
 		input_file_name = string(argv[1]);
