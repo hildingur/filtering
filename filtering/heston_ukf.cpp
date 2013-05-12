@@ -25,6 +25,8 @@ int call_counter = 0;
 string input_file_name, output_file_name = "";
 ofstream output_file;
 
+const double ftol = 1.00e-6;
+
 
 int main(int argc, char** argv) {
 
@@ -89,7 +91,6 @@ int main(int argc, char** argv) {
 		}
 	}
 	
-	DP ftol = 1.00e-6;
 	int iter;
 	DP fret;
 
@@ -134,8 +135,14 @@ DP minimize_target_unscented_kalman_parameters_1_dim(Vec_I_DP & input) {
 		estimates);
 
 	double sum = 0;
-	for(int i1 = 0; i1 < n_stock_prices; i1++)
-		sum+=(log(v[i1])+u[i1]*u[i1]/v[i1]);
+	if(abs(rho) > 1.00) {
+		sum = 1000.00;
+	} else {
+		for(int i1 = 0; i1 < n_stock_prices; i1++)
+			sum+=(log(v[i1])+u[i1]*u[i1]/v[i1]);
+	}
+
+	
 
 	//print the header first time around
 	if(call_counter==0 && !output_file_name.empty()) {
