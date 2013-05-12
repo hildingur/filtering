@@ -37,7 +37,7 @@ plot(iterations, xi);
 grid on;
 xlim([0, max(iterations)]);
 xlabel('# iterations');
-ylabel('\xi', 'rot', 0); %By convention, the third column is theta
+ylabel('\xi', 'rot', 0); %By convention, the fourth column is xi
 last_100_xi = xi(length(xi)-100 : length(xi));
 mean = sum(last_100_xi)/length(last_100_xi);
 variance = var(last_100_xi);
@@ -50,7 +50,7 @@ plot(iterations, rho);
 grid on;
 xlim([0, max(iterations)]);
 xlabel('# iterations');
-ylabel('\rho', 'rot', 0); %By convention, the third column is theta
+ylabel('\rho', 'rot', 0); %By convention, the fifth column is rho
 last_100_rho = rho(length(rho)-100 : length(rho));
 mean = sum(last_100_rho)/length(last_100_rho);
 variance = var(last_100_rho);
