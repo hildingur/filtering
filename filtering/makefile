@@ -1,13 +1,13 @@
 all: ekf ukf
 
 ekf: dir heston_ekf.o filters.o powell.o f1dim.o linmin.o mnbrak.o brent.o cholesky.o
-	g++ bin/heston_ekf.o bin/filters.o bin/powell.o bin/f1dim.o bin/linmin.o bin/mnbrak.o bin/brent.o bin/cholesky.o bin/choldc.o -o bin/ekf_main
+	g++ bin/heston_ekf.o bin/filters.o bin/powell.o bin/f1dim.o bin/linmin.o bin/mnbrak.o bin/brent.o bin/cholesky.o bin/choldc.o -o bin/heston_ekf
 
 heston_ekf.o: heston_ekf.cpp
 	g++ -c heston_ekf.cpp -o bin/heston_ekf.o
 
 ukf: dir heston_ukf.o filters.o powell.o f1dim.o linmin.o mnbrak.o brent.o cholesky.o
-	g++ bin/heston_ukf.o bin/filters.o bin/powell.o bin/f1dim.o bin/linmin.o bin/mnbrak.o bin/brent.o bin/cholesky.o bin/choldc.o -o bin/ukf_main
+	g++ bin/heston_ukf.o bin/filters.o bin/powell.o bin/f1dim.o bin/linmin.o bin/mnbrak.o bin/brent.o bin/cholesky.o bin/choldc.o -o bin/heston_ukf
 
 heston_ukf.o: heston_ukf.cpp
 	g++ -c heston_ukf.cpp -o bin/heston_ukf.o
