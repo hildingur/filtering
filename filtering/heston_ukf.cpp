@@ -6,19 +6,14 @@
 #include "./recipes/nr.h"
 #include "filters.h"
 #include <vector>
+#include "filter_utils.h"
 
 using namespace std;
 
-void read_lines(string& fname, vector<double>& out);
-DP minimize_target(Vec_I_DP & input);
-DP minimize_target_w_x_y_z_square(Vec_I_DP & input);
-
 DP minimize_target_unscented_kalman_parameters_1_dim(Vec_I_DP & input);
 
-int n_stock_prices = NULL;
-//double log_stock_prices[n_stock_prices], u[n_stock_prices], v[n_stock_prices], estimates[n_stock_prices + 1];
+int n_stock_prices = 0;
 double *log_stock_prices, *u, *v, *estimates;
-//double muS = 0.687;
 double muS = 0.0;
 int call_counter = 0;
 
@@ -26,7 +21,6 @@ string input_file_name, output_file_name = "";
 ofstream output_file;
 
 const double ftol = 1.00e-6;
-
 
 int main(int argc, char** argv) {
 
@@ -93,6 +87,7 @@ int main(int argc, char** argv) {
 	int iter;
 	DP fret;
 
+	//running the powell minimizer
 	NR::powell(starting_point, identity_matrix, ftol, iter, fret, minimize_target_unscented_kalman_parameters_1_dim);
 	
 	cout<<"Ran succesfully in "<<call_counter<<" iterations with return value "<<fret<<endl;
@@ -171,42 +166,4 @@ DP minimize_target_unscented_kalman_parameters_1_dim(Vec_I_DP & input) {
 			<<endl;
 
 	return sum;
-}
-
-
-DP minimize_target_x_squre(Vec_I_DP & input) {
-	DP in = input[0];
-	DP out = in * in;
-	cout<<"Input = "<<in<<" Returning "<<out<<endl;
-	return out;
-}
-
-DP minimize_target_w_x_y_z_square(Vec_I_DP & input) {
-
-	DP x = input[0];
-	DP y = input[1];
-	DP z = input[2];
-	DP w = input[4];
-	DP out = x*x+y*y+z*z;
-	cout<<"Input = ["<<w<<","<<x<<","<<y<<","<<z<<"] Returning "<<out<<endl;
-	return out;
-}
-
-void read_lines(string& fname, vector<double>& out) {
-	std::ifstream fhandle(fname.c_str());
-	char line[1000];
-	bool first = true;
-	int index = 0;
-	do {
-		fhandle.getline(line, 1000);
-		if(first) {
-			cout<<"Skipping the first line"<<endl;
-			first = false;
-			continue;
-		}
-		if(!fhandle.eof())
-			out.push_back(atof(line));
-
-	} while(!fhandle.eof());
-
 }
