@@ -1,4 +1,4 @@
-all: ekf ukf
+all: ekf ukf heston_ekf_vary_data_qty_bin
 
 ekf: dir heston_ekf.o filters.o powell.o f1dim.o linmin.o mnbrak.o brent.o cholesky.o filter_utils.o
 	g++ bin/heston_ekf.o bin/filters.o bin/powell.o bin/f1dim.o bin/linmin.o bin/mnbrak.o bin/brent.o bin/cholesky.o bin/choldc.o bin/filter_utils.o -o bin/heston_ekf
@@ -9,8 +9,15 @@ heston_ekf.o: heston_ekf.cpp
 ukf: dir heston_ukf.o filters.o powell.o f1dim.o linmin.o mnbrak.o brent.o cholesky.o filter_utils.o
 	g++ bin/heston_ukf.o bin/filters.o bin/powell.o bin/f1dim.o bin/linmin.o bin/mnbrak.o bin/brent.o bin/cholesky.o bin/choldc.o bin/filter_utils.o -o bin/heston_ukf
 
+heston_ekf_vary_data_qty_bin: dir heston_ekf_vary_data_qty.o filters.o powell.o f1dim.o linmin.o mnbrak.o brent.o cholesky.o filter_utils.o
+	    g++ bin/heston_ekf_vary_data_qty.o bin/filters.o bin/powell.o bin/f1dim.o bin/linmin.o bin/mnbrak.o bin/brent.o bin/cholesky.o bin/choldc.o bin/filter_utils.o -o bin/heston_ekf_vary_data_qty
+
 heston_ukf.o: heston_ukf.cpp
 	g++ -c heston_ukf.cpp -o bin/heston_ukf.o
+
+heston_ekf_vary_data_qty.o: heston_ekf_vary_data_qty.cpp
+	g++ -c heston_ekf_vary_data_qty.cpp -o bin/heston_ekf_vary_data_qty.o
+
 
 filters.o: filters.cpp
 	g++ -c filters.cpp -o bin/filters.o
@@ -38,6 +45,7 @@ choldc.o: recipes/choldc.cpp
 
 filter_utils.o: filter_utils.h filter_utils.cpp
 	g++ -c filter_utils.cpp -o bin/filter_utils.o
+
 
 
 dir:
