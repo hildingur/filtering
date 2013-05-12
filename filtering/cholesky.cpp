@@ -4,7 +4,7 @@
 #include "recipes/nr.h"
 using namespace std;
 
-// Driver for routine cholsl
+// Driver for numerical recipies choldc routine
 //Cholesky to conform to the book.
 int sqrt_matrix(double** pa, double** proda, int& N)
 {
