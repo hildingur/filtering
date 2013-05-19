@@ -1,5 +1,5 @@
 #include <math.h>
-#include "cholesky.h"
+#include "filter_utils.h"
 
 /**
    This file contains the function parameters for model parameter estimators 
@@ -15,7 +15,12 @@
   v[] is the set of variances of observation errors
   estimates[] are the estimated observations from the filter
 */
-void estimate_extended_kalman_parameters_1_dim (
+// Having u[] and v[] we can evaluate the (minus log) Likelihood as
+// the sum of log(v[i1])+u[i1]*u[i1]/v[i1]
+// and minimize the sum in order to obtain the optimal parameters
+// the minimization could be done for instance via the direction set
+// routine available in the Numerical Recipes in C
+void estimate_ekf_parm_1_dim_heston (
                                                 double *log_stock_prices,
                                                 double muS,
                                                 int n_stock_prices,
@@ -43,28 +48,101 @@ void estimate_extended_kalman_parameters_1_dim (
       if (x<0) 
         x=0.00001;
 		
-      x1 = x + (omega-rho*xi*muS - (theta-0.5*rho*xi) * x) * delt + rho*xi* (log_stock_prices[i1]-log_stock_prices[i1-1]);
-      A = 1.0-(theta-0.5*rho*xi)*delt;
-      W = xi*sqrt((1-rho*rho) * x * delt);
-      P1 = W*W + A*P*A;
+	  //2.15. TODO: Replace with 2.27 pg 121.
+      x1 = x + (omega-rho*xi*muS - (theta-0.5*rho*xi) * x) * delt 
+			 + rho * xi * (log_stock_prices[i1]-log_stock_prices[i1-1]);
+      //after 2.16. TODO: replace with 2.27, pg 121
+	  A = 1.0-(theta-0.5*rho*xi)*delt;
+      W = xi*sqrt((1-rho*rho) * x * delt); //TODO: Update with page 121
+      
+	  //From the Generic EKF algo. 
+	  P1 = W*W + A*P*A;
       if (x1<0) 
         x1=0.00001;
-      H = -0.5*delt;
-      U = sqrt(x1*delt);
-      K = P1*H/( H*P1*H + U*U);
-      z = log_stock_prices[i1+1];
-      x = x1 + K * (z - (log_stock_prices[i1] + (muS-0.5*x1)*delt));
-      u[i1] = z - (log_stock_prices[i1] + (muS-0.5*x1)*delt);
-      v[i1] = H*P1*H + U*U;
-      estimates[i1+1] = log_stock_prices[i1] + (muS-0.5*x1)*delt;
-      P=(1.0-K*H)*P1;
+
+      H = -0.5*delt; //after 2.16. Ok asis
+      U = sqrt(x1*delt); //after 2.16, in 2.15, x1 in code is. OK as is.
+	  //is the same as x_k in the 2.5. Here it becomes v_k
+
+      K = P1*H/( H*P1*H + U*U); //KF: Kalman Gain 2.11
+
+      z = log_stock_prices[i1+1]; //next actual price
+
+      x = x1 + K * (z - (log_stock_prices[i1] + (muS-0.5*x1)*delt)); //KF: measurement updates 2.9
+      u[i1] = z - (log_stock_prices[i1] + (muS-0.5*x1)*delt); //means of observation errors (MPE?)
+      v[i1] = H*P1*H + U*U; //variances of observation errors
+      estimates[i1+1] = log_stock_prices[i1] + (muS-0.5*x1)*delt; //next estimate
+      P=(1.0-K*H)*P1; //KF: P update
 	}
 }
-// Having u[] and v[] we can evaluate the (minus log) Likelihood as
-// the sum of log(v[i1])+u[i1]*u[i1]/v[i1]
-// and minimize the sum in order to obtain the optimal parameters
-// the minimization could be done for instance via the direction set
-// routine available in the Numerical Recipes in C
+
+
+/*
+  log_stock_prices are the log of stock prices
+  muS is the real-world stock drift
+  n_stock_prices is the number of the above stock prices
+  (omega, theta, xi, rho) are the Heston parameters
+  u[] is the set of means of observation errors
+  v[] is the set of variances of observation errors
+  estimates[] are the estimated observations from the filter
+*/
+void estimate_ekf_parm_1_dim (
+	double *log_stock_prices,
+	double muS,
+	int n_stock_prices,
+	double omega,
+	double theta,
+	double xi,
+	double rho,
+	double p,
+	double *u,
+	double *v,
+	double *estimates)
+{
+  int i1;
+  double x, x1, W, H, A;
+  double P, P1, z, U, K;
+  const double delt=1.0/252.0;
+  const double eps=0.00001;
+  x = 0.04; //initialized to 0.04 i.e. 40% as specified in the problem
+  P=0.01;
+  u[0]=u[n_stock_prices-1]=0.0;
+  v[0]=v[n_stock_prices-1]=1.0;
+  estimates[0]=estimates[1]=log_stock_prices[0]+eps;
+
+  for (i1=1;i1<n_stock_prices-1;i1++)
+	{
+      if (x<0) 
+        x=0.00001;
+	
+      x1 = x 
+		+ (omega - rho*xi*muS*pow(x, p - 0.5) - (theta-0.5*rho*xi*pow(x, p - 0.5)) * x) * delt 
+		+ rho * xi * pow(x, p - 0.5) * (log_stock_prices[i1]-log_stock_prices[i1-1]);
+      
+	  A = 1.0 
+		  - ((rho * xi * muS) * (p - 0.5) * pow(x, p - 1.5) + theta - 0.5 * rho * (p + 0.5) * pow(x, p - 0.5)) * delt
+		  + (p - 0.5) * rho * xi * pow(x, p - 1.5) * (log_stock_prices[i1]-log_stock_prices[i1-1]);
+	  //xi*sqrt((1-rho*rho) * x * delt);
+      W = xi * sqrt((1 - rho * rho) * delt) * pow(x, p);
+
+	  P1 = W*W + A*P*A;
+      if (x1<0) 
+        x1=0.00001;
+
+      H = -0.5 * delt;
+	  U = sqrt(x1 * delt);
+	  
+      K = P1*H/( H*P1*H + U*U);
+
+      z = log_stock_prices[i1+1];
+
+      x = x1 + K * (z - (log_stock_prices[i1] + (muS-0.5*x1)*delt)); //KF: measurement updates 2.9
+      u[i1] = z - (log_stock_prices[i1] + (muS-0.5*x1)*delt); //means of observation errors (MPE?)
+      v[i1] = H*P1*H + U*U; //variances of observation errors
+      estimates[i1+1] = log_stock_prices[i1] + (muS-0.5*x1)*delt; //next estimate
+      P=(1.0-K*H)*P1; //KF: P update
+	}
+}
 
 void estimate_unscented_kalman_parameters_1_dim(double *log_stock_prices,
                                                 double muS,
@@ -148,17 +226,16 @@ void estimate_unscented_kalman_parameters_1_dim(double *log_stock_prices,
             }
         }
       for (i3=(1+na);i3<(2*na+1);i3++)
-        {
+	  {
           for (i1=0;i1<na;i1++)
             {
               Xa[i1][i3]= xa[i1] - sqrt(na+lambda) * proda[i1][i3-na-1];
-            } }
+            } 
+	  }
       for (i3=0;i3<(2*na+1);i3++)
         {
           if (Xa[0][i3]<0) Xa[0][i3]=0.0001;
-          X[i3]= Xa[0][i3] + (omega-muS*rho*xi
-                              -
-                              (theta-0.5*rho*xi) *Xa[0][i3])*delt +
+          X[i3]= Xa[0][i3] + (omega-muS*rho*xi - (theta-0.5*rho*xi) *Xa[0][i3])*delt +
             rho*xi* (log_stock_prices[t1]-log_stock_prices[t1-1]) +
             xi*sqrt((1-rho*rho)*delt*Xa[0][i3])*Xa[1][i3];
         }

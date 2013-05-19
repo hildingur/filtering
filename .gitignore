@@ -10,3 +10,4 @@ filtering/Debug
 *exe
 filtering/bin
 *.pdf
+Release/

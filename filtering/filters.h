@@ -14,8 +14,11 @@ as defined in Alireza Javaheri's book, "Inside Volatility Arbitrage"
  u[] is the set of means of observation errors
  v[] is the set of variances of observation errors
  estimates[] are the estimated observations from the filter
+
+ CONTAINS THE HESTON CASE i.e. p = 0.5
+
 */
-void estimate_extended_kalman_parameters_1_dim(
+void estimate_ekf_parm_1_dim_heston (
 	double *log_stock_prices,
 	double muS,
 	int n_stock_prices,
@@ -26,6 +29,32 @@ void estimate_extended_kalman_parameters_1_dim(
 	double *u,
 	double *v,
 	double *estimates);
+
+/*
+ log_stock_prices are the log of stock prices
+ muS is the real-world stock drift
+ n_stock_prices is the number of the above stock prices
+ (omega, theta, xi, rho) are the Heston parameters
+ u[] is the set of means of observation errors
+ v[] is the set of variances of observation errors
+ estimates[] are the estimated observations from the filter
+
+ CONTAINS THE case where p is a free variable in the optimization.
+
+*/
+void estimate_ekf_parm_1_dim (
+	double *log_stock_prices,
+	double muS,
+	int n_stock_prices,
+	double omega,
+	double theta,
+	double xi,
+	double rho,
+	double p,
+	double *u,
+	double *v,
+	double *estimates);
+
 
 // the routine sqrt_matrix() can be constructed via the Cholesly decomposition
 // also available as choldc() in the Numerical Recipes in C
@@ -51,31 +80,5 @@ void estimate_unscented_kalman_parameters_1_dim(
                                                 double *v,
                                                 double *estimates);
 
-/*
-void estimate_particle_extended_kalman_parameters_1_dim(
-                                                        double *log_stock_prices,
-                                                        double muS,
-                                                        int n_stock_prices,
-                                                        double omega,
-                                                        double theta,
-                                                        double xi,
-                                                        double rho,
-                                                        double *ll,
-                                                        double *estimates);
-
-// *ll is the value of (negative log) Likelihood function
-// we can minimize it to obtain the optimal parameter-set
-
-void estimate_particle_unscented_kalman_parameters_1_dim(
-                                                         double *log_stock_prices,
-                                                         double muS,
-                                                         int n_stock_prices,
-                                                         double omega,
-                                                         double theta,
-                                                         double xi,
-                                                         double rho,
-                                                         double *ll,
-                                                         double *estimates);
-														 */
 
 #endif
