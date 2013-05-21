@@ -14,7 +14,9 @@ using namespace std;
 
 enum VolModel {HESTON = 1, GARCH = 2, THREE_TWO = 3, VAR_P = 4};
 enum RunMode {SIMPLE = 1, NORMAL_RESIDUALS = 2, UNCORRELATED_RESIDUALS = 3, NORMAL_AND_UNCORRELATED_RESIDUALS = 4};
+enum VolParams {OMEGA, THETA, XI, ROE, P};
 
+const double rand_max = RAND_MAX;
 int n_stock_prices = 0;
 double *log_stock_prices, *u, *v, *estimates;
 double muS = 0.0;
@@ -63,6 +65,16 @@ void mark_better_parameters(int& simulation_counter,
 	vol_params& new_best_params,
 	ofstream& log_stream,
 	int price_count);
+
+string get_VolParams_string(VolParams& vp);
+
+//Gets the next vol parameter to preturb
+/*
+@param last_param the last param that was used to preturb the solution.
+@param result_improved whether the last preturbation resulted in an improved result.
+@param current_model: The current vol model being used.
+*/
+VolParams get_next_VolParam_to_preturb(VolParams last_param, bool& result_improved, VolModel& current_model);
 
 int main(int argc, char** argv) {
 	
@@ -123,6 +135,9 @@ int main(int argc, char** argv) {
 	residual_file.setf(ios::fixed);
 	residual_file<<setprecision(10);
 
+	VolParams current_param_being_preturbed = OMEGA;
+	double* residuals = new double[prices.size()];
+	
 	while(simulation_counter <= max_simulations)
 	{
 		int nvars = (model!=VAR_P) ? 4 : 5; 
@@ -133,7 +148,6 @@ int main(int argc, char** argv) {
 				(*identity_matrix)[i][j] = (i==j) ? 1 : 0;
 			}
 		}
-
 
 		current_params.populate_starting_vector(start);
 		for(int i = 0; i < 5; i++)
@@ -154,10 +168,11 @@ int main(int argc, char** argv) {
 		if(model==VAR_P)
 			cout<<" p = "<<params_buffer.get_p();
 		cout<<endl<<endl;
-
+		
 		if(runmode == NORMAL_RESIDUALS) 
 		{
-			double* residuals = new double[prices.size()];
+			bool solution_improved = false;
+
 			for(unsigned int i = 0; i < prices.size(); i++) {
 				residuals[i] = prices[i] - exp(estimates[i]);
 			}
@@ -169,39 +184,57 @@ int main(int argc, char** argv) {
  
 				if(best_params.get_mle() > mle && best_params.get_chi2() > chi2)
 				{
+					solution_improved = true;
 					mark_better_parameters(simulation_counter, max_simulations, mle, chi2, best_params, params_buffer, log_file, prices.size());
 				} 
 				else 
 				{
-					log_file<<"We have NOT found better parameters on simulation # "<<simulation_counter << " out of "<< max_simulations
-						<<" new mle = "<< mle <<" old mle = "<<best_params.get_mle()
-						<<" new chi2 = "<<chi2<<" old chi2 = "<<best_params.get_chi2()<<endl
-						<<"Resetting the parameters to the previous best estimate, and then preturbing..."<<endl;
+					log_file<<"We have NOT found better parameters on simulation # "<<simulation_counter << " out of "<< max_simulations <<endl
+						<<"-- new mle = "<< mle <<" old mle = "<<best_params.get_mle()
+						<<"-- new chi2 = "<<chi2<<" old chi2 = "<<best_params.get_chi2()<<endl
+						<<"-- Resetting the parameters to the previous best estimate, and then preturbing..."<<endl;
 					params_buffer.copy_params(best_params);
 				}
 
-				cout<<"Residuals are NOT normal... preturbing the starting variables and beginning again"<<endl;
-
+				
 				//Preturbing omega, theta and xi with N(0,2), rho with U(-0.9, 0.9) and p with U(0.5,1.5)
-				current_params.set_omega(gaussrand() * sqrt(2.00) + params_buffer.get_omega());
-				current_params.set_theta(gaussrand() * sqrt(2.00) + params_buffer.get_theta());
-				current_params.set_xi(gaussrand() * sqrt(2.00) + params_buffer.get_xi());
-				double rand_max = RAND_MAX;
-				current_params.set_roe(((rand()/rand_max) * 2.00) - 1.00);
-				if(model==VAR_P) {//p is alse being estimated
-					current_params.set_p((((double)rand())/rand_max) + 0.5);
-				}
+				current_param_being_preturbed = get_next_VolParam_to_preturb(current_param_being_preturbed, 
+					solution_improved, 
+					model);
 
-				log_file<<"omega preturbed from "<<params_buffer.get_omega()<<" to "<<current_params.get_omega()<<endl;
-				log_file<<"theta preturbed from "<<params_buffer.get_theta()<<" to "<<current_params.get_theta()<<endl;
-				log_file<<"xi    preturbed from "<<params_buffer.get_xi()<<" to "<<current_params.get_xi()<<endl;
-				log_file<<"rho   preturbed from "<<params_buffer.get_roe()<<" to "<<current_params.get_roe()<<endl;
+				cout<<"Preturbing "<<get_VolParams_string(current_param_being_preturbed)<<endl<<endl<<endl;
+
+				
+				switch(current_param_being_preturbed)
+				{
+				case OMEGA: current_params.set_omega(gaussrand() * sqrt(2.00) + params_buffer.get_omega());
+					break;
+				case THETA: current_params.set_theta(gaussrand() * sqrt(2.00) + params_buffer.get_theta());
+					break;
+				case XI:
+					current_params.set_xi(gaussrand() * sqrt(2.00) + params_buffer.get_xi());
+					break;
+				case ROE:
+					current_params.set_roe(((rand()/rand_max) * 2.00) - 1.00);
+					break;
+				case VAR_P:
+					current_params.set_p((((double)rand())/rand_max) + 0.5);
+					break;
+				}
+				
+				log_file<<"old omega "<<params_buffer.get_omega()<<" new -> "<<current_params.get_omega()<<endl;
+				log_file<<"old theta "<<params_buffer.get_theta()<<" new-> "<<current_params.get_theta()<<endl;
+				log_file<<"old xi    "<<params_buffer.get_xi()   <<" new-> "<<current_params.get_xi()<<endl;
+				log_file<<"old rho   "<<params_buffer.get_roe()  <<" new-> "<<current_params.get_roe()<<endl;
 				if(model==VAR_P)
-					log_file<<"p changed from     "<<params_buffer.get_p()<<" to "<<current_params.get_p()<<endl;
+					log_file<<"old p     "<<params_buffer.get_p()<<" new-> "<<current_params.get_p()<<endl;
+
+				log_file<<endl<<endl<<endl;
+
 
 				call_counter = 0;
 			} else {
-				log_file<<"Results are Normal, exiting"<<endl;
+				log_file<<"Results are Normal, exiting..."<<endl;
 				mark_better_parameters(simulation_counter, max_simulations, mle, chi2, best_params, params_buffer, log_file, prices.size());
 				break;
 			}
@@ -239,7 +272,7 @@ int main(int argc, char** argv) {
 	residual_file.close();
 	paramter_file.close();
 
-	delete[] log_stock_prices, u, v, estimates;
+	delete[] log_stock_prices, u, v, estimates, residuals;
 	delete start_, identity_matrix;
 	/*
 	cout<<"Press any key to continue"<<endl;
@@ -278,7 +311,6 @@ void parse_args(int argc, char** argv,
 
 		std::cout<<"input file is "<<input_file_name<<endl;
 		std::cout<<"parameter_output_file is "<<parameter_file_name<<endl;
-
 		std::cout<<"residual_output_file is "<<residual_file_name<<endl;
 
 		if(model_!="1" &&
@@ -401,6 +433,21 @@ void log_parameters(double& omega,
 
 }
 
+VolParams get_next_VolParam_to_preturb(VolParams last_param, bool& result_improved, VolModel& current_model)
+{
+	if(result_improved)
+		return last_param;
+	switch(last_param)
+	{//OMEGA, THETA, XI, ROE, P
+	case OMEGA: return THETA;
+	case THETA: return XI;
+	case XI: return ROE;
+	case ROE: return ((current_model != VAR_P) ? OMEGA : P);
+	case P: return OMEGA;
+	default: return OMEGA;
+	}
+}
+
 void init_log(const VolModel model, const RunMode runmode, ofstream& log_stream)
 {
 	string logfile = "./log_" + get_model_name(model) + "_" + get_run_mode(runmode);
@@ -451,8 +498,23 @@ void mark_better_parameters(int& simulation_counter,
 		<<"mark_better_parameters: "<<" new roe   = "<<new_best_params.get_roe()   <<" old roe   = "<<current_best_params.get_roe()<<endl;
 	if(model==VAR_P)
 		log_stream<<"mark_better_parameters: "<<" new p     = "<<new_best_params.get_p()   <<" old p     = "<<current_best_params.get_p()<<endl;
+
+	log_stream<<endl<<endl;
 	current_best_params.set_best_estimate(new_best_params, new_mle, new_chi2, u, v, estimates, price_count);
 }
+
+string get_VolParams_string(VolParams& vp)
+{
+	switch(vp)
+	{
+	case OMEGA: return "OMEGA";
+	case THETA: return "THETA";
+	case XI: return "XI";
+	case ROE: return "ROE";
+	default: return "P";
+	}
+}
+
 /*
 
 //The function to minimize for the heston case
