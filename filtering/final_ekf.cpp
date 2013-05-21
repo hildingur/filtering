@@ -55,6 +55,15 @@ void log_parameters(double& omega,
 	double& p,
 	double& mle);
 
+void mark_better_parameters(int& simulation_counter,
+	int& max_simulations,
+	double& new_mle,
+	double& new_chi2,
+	vol_params& current_best_params,
+	vol_params& new_best_params,
+	ofstream& log_stream,
+	int price_count);
+
 int main(int argc, char** argv) {
 	
 	srand(time(NULL)); //seed the random number generator
@@ -160,10 +169,7 @@ int main(int argc, char** argv) {
  
 				if(best_params.get_mle() > mle && best_params.get_chi2() > chi2)
 				{
-					log_file<<"We have found better parameters on simulation # "<<simulation_counter << " out of "<< max_simulations
-						<<" new mle = "<< mle <<" old mle = "<<best_params.get_mle()
-						<<" new chi2 = "<<chi2<<" old chi2 = "<<best_params.get_chi2()<<endl;
-					best_params.set_best_estimate(params_buffer, mle, chi2, u, v, estimates, prices.size());
+					mark_better_parameters(simulation_counter, max_simulations, mle, chi2, best_params, params_buffer, log_file, prices.size());
 				} 
 				else 
 				{
@@ -196,6 +202,7 @@ int main(int argc, char** argv) {
 				call_counter = 0;
 			} else {
 				log_file<<"Results are Normal, exiting"<<endl;
+				mark_better_parameters(simulation_counter, max_simulations, mle, chi2, best_params, params_buffer, log_file, prices.size());
 				break;
 			}
 		} 
@@ -425,7 +432,27 @@ string get_model_name(const VolModel model)
 	}
 }
 
-
+void mark_better_parameters(int& simulation_counter,
+	int& max_simulations,
+	double& new_mle,
+	double& new_chi2,
+	vol_params& current_best_params,
+	vol_params& new_best_params,
+	ofstream& log_stream,
+	int price_count)
+{
+	log_stream<<"mark_better_parameters: We have found better parameters on simulation # "<<simulation_counter 
+		<< " out of "<< max_simulations <<" on model "<<get_model_name(model)<<endl
+		<<"mark_better_parameters: "<<" new mle   = "<< new_mle                    <<" old mle   = "<<current_best_params.get_mle()<<endl
+		<<"mark_better_parameters: "<<" new chi2  = "<<new_chi2                    <<" old chi2  = "<<current_best_params.get_chi2()<<endl
+		<<"mark_better_parameters: "<<" new omega = "<<new_best_params.get_omega() <<" old omega = "<<current_best_params.get_omega()<<endl
+		<<"mark_better_parameters: "<<" new theta = "<<new_best_params.get_theta() <<" old theta = "<<current_best_params.get_theta()<<endl
+		<<"mark_better_parameters: "<<" new xi    = "<<new_best_params.get_xi()    <<" old xi    = "<<current_best_params.get_xi()<<endl
+		<<"mark_better_parameters: "<<" new roe   = "<<new_best_params.get_roe()   <<" old roe   = "<<current_best_params.get_roe()<<endl;
+	if(model==VAR_P)
+		log_stream<<"mark_better_parameters: "<<" new p     = "<<new_best_params.get_p()   <<" old p     = "<<current_best_params.get_p()<<endl;
+	current_best_params.set_best_estimate(new_best_params, new_mle, new_chi2, u, v, estimates, price_count);
+}
 /*
 
 //The function to minimize for the heston case
