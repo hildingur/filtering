@@ -25,7 +25,8 @@ compile=g++ -c -o3
 all: final_ekf
 
 final_ekf: dir filters.o powell.o filter_utils.o final_ekf.o
-	g++ bin/filters.o bin/powell.o bin/f1dim.o bin/linmin.o bin/mnbrak.o bin/brent.o bin/choldc.o bin/filter_utils.o bin/final_ekf.o -o bin/final_ekf
+	g++ bin/*.o -o bin/final_ekf
+#	g++ bin/filters.o bin/powell.o bin/f1dim.o bin/linmin.o bin/mnbrak.o bin/brent.o bin/choldc.o bin/filter_utils.o bin/final_ekf.o -o bin/final_ekf
 
 final_ekf.o: final_ekf.cpp
 	${compile} final_ekf.cpp -o bin/final_ekf.o
@@ -51,10 +52,26 @@ brent.o: recipes/brent.cpp
 choldc.o: recipes/choldc.cpp
 	${compile} recipes/choldc.cpp -o bin/choldc.o
 
-filter_utils.o: filter_utils.h filter_utils.cpp choldc.o
+filter_utils.o: choldc.o chsone.o moment.o filter_utils.h filter_utils.cpp
 	${compile} filter_utils.cpp -o bin/filter_utils.o
 
+chsone.o: gammq.o recipes/chsone.cpp 
+	${compile} recipes/chsone.cpp -o bin/chsone.o
 
+moment.o: recipes/moment.cpp
+	${compile} recipes/moment.cpp -o bin/moment.o
+
+gammq.o: gser.o gcf.o recipes/gammq.cpp
+	${compile} recipes/gammq.cpp -o bin/gammq.o
+
+gser.o: gammln.o recipes/gser.cpp
+	${compile} recipes/gser.cpp -o bin/gser.o
+
+gcf.o: gammln.o recipes/gcf.cpp
+	${compile} recipes/gcf.cpp -o bin/gcf.o
+
+gammln.o: recipes/gammln.cpp
+	${compile} recipes/gammln.cpp -o bin/gammln.o
 
 dir:
 	mkdir -p bin

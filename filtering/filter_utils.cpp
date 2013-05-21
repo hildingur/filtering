@@ -5,8 +5,10 @@
 #include <iostream>
 #include <cstdlib>
 #include <iomanip>
+#include <cmath>
 
 using namespace std;
+using namespace NR;
 
 void read_lines(string& fname, vector<double>& out) {
 	std::ifstream fhandle(fname.c_str());
@@ -51,7 +53,7 @@ int sqrt_matrix(double** pa, double** proda, int& N)
 /**
 Checks to see if the data is normal using the k-s test
 */
-bool is_normal(double* data, int data_count)
+bool is_normal(double* data, int data_count, double& chi2_)
 {
 	const int bin_count = 22;
 	const int edge_count = bin_count - 1;
@@ -115,6 +117,8 @@ bool is_normal(double* data, int data_count)
 		<<"prob = "<<prob<<endl;
 	
 	delete[] normalized_data;
+
+	chi2_ = chsq;
 
 	return chsq < 31.50;
 }
@@ -180,4 +184,196 @@ double gaussrand()
 	phase = 1 - phase;
 
 	return X;
+}
+
+double vol_params::get_omega()
+{
+	return omega;
+}
+	
+double vol_params::get_theta()
+{
+	return theta;
+}
+
+double vol_params::get_xi()
+{
+	return xi;
+}
+
+double vol_params::get_roe()
+{
+	return roe;
+}
+
+double vol_params::get_p()
+{
+	return p;
+}
+
+double vol_params::get_mle()
+{
+	return mle;
+}
+
+double vol_params::get_chi2()
+{
+	return chi2;
+}
+	
+void vol_params::set_omega(double omega_)
+{
+	omega = omega_;
+}
+	
+void vol_params::set_theta(double theta_)
+{
+	theta = theta_;
+}
+	
+void vol_params::set_xi(double xi_)
+{
+	xi = xi_;
+}
+	
+void vol_params::set_roe(double roe_)
+{
+	roe = roe_;
+}
+
+void vol_params::set_p(double p_) 
+{
+	p = p_;
+}
+
+void vol_params::set_mle(double mle_)
+{
+	mle = mle_;
+}
+
+void vol_params::set_chi2(double chi2_)
+{
+	chi2 = chi2_;
+}
+
+void vol_params::copy_params(vol_params& params)
+{
+	omega = params.omega;
+	p = params.p;
+	roe = params.roe;
+	theta = params.theta;
+	xi = params.xi;
+}
+
+vol_params::vol_params()
+{
+	u = NULL;
+	v = NULL;
+	estimates = NULL;
+
+	mle = pow(10.00, 6);
+	chi2 = pow(10.00, 6);
+	omega = 0.00;
+	p = 0.00;
+	roe = 0.00;
+	theta = 0.00;
+	xi = 0.00;
+
+}
+
+vol_params::vol_params(double omega_, double theta_, double xi_, double roe_, double p_, double mle_, double chi2_)
+{
+	u = NULL;
+	v = NULL;
+	estimates = NULL;
+
+	mle = mle_;
+	chi2 = chi2_;
+	omega = omega_;
+	p = p_;
+	roe = roe_;
+	theta = theta_;
+	xi = xi_;
+}
+
+//copy constructor
+vol_params::vol_params(const vol_params& copy) 
+{
+	u = NULL;
+	v = NULL;
+	estimates = NULL;
+
+	mle = copy.mle;
+	chi2 = copy.chi2;
+	omega = copy.omega;
+	p = copy.p;
+	roe = copy.roe;
+	theta = copy.theta;
+	xi = copy.xi;
+}
+
+void vol_params::populate_starting_vector(Vec_IO_DP& starting_vector)
+{
+	starting_vector[0] = omega;
+	starting_vector[1] = theta;
+	starting_vector[2] = xi;
+	starting_vector[3] = roe;
+	if(starting_vector.size() == 5)
+		starting_vector[4] = p;
+}
+
+void vol_params::extract_params_from_vector(Vec_IO_DP& v)
+{
+	omega = v[0];
+	theta = v[1];
+	xi = v[2];
+	roe = v[3];
+	if(v.size() == 5)
+		p = v[4];
+}
+
+void vol_params::set_best_estimate(const vol_params& params, 
+		const double mle_, 
+		const double chi2_, 
+		const double* u_,
+		const double* v_,
+		const double* estimates_,
+		const int size) 
+{
+	mle = mle_;
+	chi2 = chi2_;
+
+	if(u == NULL) {
+		u = new double[size];
+		v = new double[size];
+		estimates = new double[size];
+	}
+	
+	for(int i = 0; i < size; i++)
+	{
+		u[i] = u_[i];
+		v[i] = v_[i];
+		estimates[i] = estimates_[i];
+	}
+
+	omega = params.omega;
+	p = params.p;
+	roe = params.roe;
+	theta = params.theta;
+	xi = params.xi;
+}
+
+double* vol_params::get_u()
+{
+	return u;
+}
+
+double* vol_params::get_v()
+{
+	return v;
+}
+
+double* vol_params::get_estimates()
+{
+	return estimates;
 }
