@@ -97,24 +97,11 @@ int main(int argc, char** argv) {
 	{
 		//Initializing the starting point
 		start_ = new Vec_IO_DP(4);
-
-		double identity_4_4[16]  = 
-		{ 1, 0, 0, 0,
-			0, 1, 0, 0,
-			0, 0, 1, 0,
-			0, 0, 0, 1};
-		identity_matrix = new Mat_IO_DP(identity_4_4, 4, 4);
+		identity_matrix = new Mat_IO_DP(4, 4);
 	} else { //we are trying to estimate p, so we want a 5x5 matrix
 		//Initializing the starting point
 		start_ = new Vec_IO_DP(5);
-		
-		double identity_5_5[25]  = 
-		{ 1, 0, 0, 0, 0,
-			0, 1, 0, 0, 0,
-			0, 0, 1, 0, 0,
-			0, 0, 0, 1, 0,
-			0, 0, 0, 0, 1};
-		identity_matrix = new Mat_IO_DP(identity_5_5, 5, 5);
+		identity_matrix = new Mat_IO_DP(5, 5);
 	}
 
 	Vec_IO_DP& start = *start_; //aliasing the pointer for easy reference
@@ -129,12 +116,23 @@ int main(int argc, char** argv) {
 
 	while(simulation_counter <= max_simulations)
 	{
+		int nvars = (model!=VAR_P) ? 4 : 5; 
+		for(int i = 0; i < nvars; i++) 
+		{
+			for(int j = 0; j < nvars; j++)
+			{
+				(*identity_matrix)[i][j] = (i==j) ? 1 : 0;
+			}
+		}
+
+
 		current_params.populate_starting_vector(start);
 		for(int i = 0; i < 5; i++)
 			cout<<start[i]<<endl;
 
 		int iter;
 		DP mle = 0.00;
+		
 		NR::powell(start, *identity_matrix, ftol, iter, mle, minimize_target_ekf);
 		cout<<"Ran in "<<call_counter<<" iterations with return value "<<mle<<endl;
 		
