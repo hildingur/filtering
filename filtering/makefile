@@ -24,53 +24,53 @@ compile=g++ -c -o3
 
 all: final_ekf
 
-final_ekf: dir filters.o powell.o filter_utils.o final_ekf.o
+final_ekf: dir bin/filters.o bin/powell.o bin/filter_utils.o bin/final_ekf.o
 	g++ bin/*.o -o bin/final_ekf
 #	g++ bin/filters.o bin/powell.o bin/f1dim.o bin/linmin.o bin/mnbrak.o bin/brent.o bin/choldc.o bin/filter_utils.o bin/final_ekf.o -o bin/final_ekf
 
-final_ekf.o: final_ekf.cpp
+bin/final_ekf.o: final_ekf.cpp
 	${compile} final_ekf.cpp -o bin/final_ekf.o
 
-filters.o: filters.cpp
+bin/filters.o: filters.cpp
 	${compile} filters.cpp -o bin/filters.o
 
-powell.o: f1dim.o linmin.o mnbrak.o brent.o choldc.o recipes/powell.cpp
+bin/powell.o: bin/f1dim.o bin/linmin.o bin/mnbrak.o bin/brent.o bin/choldc.o recipes/powell.cpp
 	${compile} recipes/powell.cpp -o bin/powell.o
 
-f1dim.o: recipes/f1dim.cpp
+bin/f1dim.o: recipes/f1dim.cpp
 	${compile} recipes/f1dim.cpp -o bin/f1dim.o
 
-linmin.o: recipes/linmin.cpp
+bin/linmin.o: recipes/linmin.cpp
 	${compile} recipes/linmin.cpp -o bin/linmin.o
 
-mnbrak.o: recipes/mnbrak.cpp
+bin/mnbrak.o: recipes/mnbrak.cpp
 	${compile} recipes/mnbrak.cpp -o bin/mnbrak.o
 
-brent.o: recipes/brent.cpp
+bin/brent.o: recipes/brent.cpp
 	${compile} recipes/brent.cpp -o bin/brent.o
 
-choldc.o: recipes/choldc.cpp
+bin/choldc.o: recipes/choldc.cpp
 	${compile} recipes/choldc.cpp -o bin/choldc.o
 
-filter_utils.o: choldc.o chsone.o moment.o filter_utils.h filter_utils.cpp
+bin/filter_utils.o: bin/choldc.o bin/chsone.o bin/moment.o filter_utils.h filter_utils.cpp
 	${compile} filter_utils.cpp -o bin/filter_utils.o
 
-chsone.o: gammq.o recipes/chsone.cpp 
+bin/chsone.o: bin/gammq.o recipes/chsone.cpp 
 	${compile} recipes/chsone.cpp -o bin/chsone.o
 
-moment.o: recipes/moment.cpp
+bin/moment.o: recipes/moment.cpp
 	${compile} recipes/moment.cpp -o bin/moment.o
 
-gammq.o: gser.o gcf.o recipes/gammq.cpp
+bin/gammq.o: bin/gser.o bin/gcf.o recipes/gammq.cpp
 	${compile} recipes/gammq.cpp -o bin/gammq.o
 
-gser.o: gammln.o recipes/gser.cpp
+bin/gser.o: bin/gammln.o recipes/gser.cpp
 	${compile} recipes/gser.cpp -o bin/gser.o
 
-gcf.o: gammln.o recipes/gcf.cpp
+bin/gcf.o: bin/gammln.o recipes/gcf.cpp
 	${compile} recipes/gcf.cpp -o bin/gcf.o
 
-gammln.o: recipes/gammln.cpp
+bin/gammln.o: recipes/gammln.cpp
 	${compile} recipes/gammln.cpp -o bin/gammln.o
 
 dir:
