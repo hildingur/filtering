@@ -108,7 +108,7 @@ int main(int argc, char** argv) {
 
 	//param variables are omega, theta, rho, p, mle, chi_squared_statistic 
 	vol_params current_params(0.2, 1.00, 0.50, -0.20, 1.00, pow(10.00, 6), pow(10.00, 6));
-	vol_params best_params(current_params), params_buffer(current_params);
+	vol_params best_params(current_params);
 	
 	Vec_IO_DP* start_;
 	
@@ -159,14 +159,14 @@ int main(int argc, char** argv) {
 		NR::powell(start, *identity_matrix, ftol, iter, mle, minimize_target_ekf);
 		cout<<"Ran in "<<call_counter<<" iterations with return value "<<mle<<endl;
 		
-		params_buffer.extract_params_from_vector(start);
+		current_params.extract_params_from_vector(start);
 
-		cout<<"Parameters are "<<" omega = "<<params_buffer.get_omega()
-					<<" theta = "<<params_buffer.get_theta()
-					<<" xi = "<<params_buffer.get_xi()
-					<<" rho = "<<params_buffer.get_roe();
+		cout<<"Parameters are "<<" omega = "<<current_params.get_omega()
+					<<" theta = "<<current_params.get_theta()
+					<<" xi = "<<current_params.get_xi()
+					<<" rho = "<<current_params.get_roe();
 		if(model==VAR_P)
-			cout<<" p = "<<params_buffer.get_p();
+			cout<<" p = "<<current_params.get_p();
 		cout<<endl<<endl;
 		
 		if(runmode == NORMAL_RESIDUALS) 
@@ -186,7 +186,7 @@ int main(int argc, char** argv) {
 				if(best_params.get_mle() > mle)
 				{
 					solution_improved = true;
-					mark_better_parameters(simulation_counter, max_simulations, mle, chi2, best_params, params_buffer, log_file, prices.size());
+					mark_better_parameters(simulation_counter, max_simulations, mle, chi2, best_params, current_params, log_file, prices.size());
 				} 
 				else 
 				{
@@ -194,7 +194,7 @@ int main(int argc, char** argv) {
 						<<"-- new mle = "<< mle <<" old mle = "<<best_params.get_mle()
 						<<"-- new chi2 = "<<chi2<<" old chi2 = "<<best_params.get_chi2()<<endl
 						<<"-- Resetting the parameters to the previous best estimate, and then preturbing..."<<endl;
-					params_buffer.copy_params(best_params);
+					current_params.copy_params(best_params);
 				}
 
 				
@@ -207,12 +207,12 @@ int main(int argc, char** argv) {
 				
 				switch(current_param_being_preturbed)
 				{
-				case OMEGA: current_params.set_omega(abs(gaussrand()) * sqrt(2.00) + params_buffer.get_omega());
+				case OMEGA: current_params.set_omega(abs(gaussrand()) * sqrt(2.00) + best_params.get_omega());
 					break;
-				case THETA: current_params.set_theta(abs(gaussrand()) * sqrt(2.00) + params_buffer.get_theta());
+				case THETA: current_params.set_theta(abs(gaussrand()) * sqrt(2.00) + best_params.get_theta());
 					break;
 				case XI:
-					current_params.set_xi(abs(gaussrand()) * sqrt(2.00) + params_buffer.get_xi());
+					current_params.set_xi(abs(gaussrand()) * sqrt(2.00) + best_params.get_xi());
 					break;
 				case ROE:
 					current_params.set_roe((abs(rand()/rand_max) * 2.00) - 1.00);
@@ -222,12 +222,12 @@ int main(int argc, char** argv) {
 					break;
 				}
 				
-				log_file<<"old omega "<<params_buffer.get_omega()<<" new -> "<<current_params.get_omega()<<endl;
-				log_file<<"old theta "<<params_buffer.get_theta()<<" new-> "<<current_params.get_theta()<<endl;
-				log_file<<"old xi    "<<params_buffer.get_xi()   <<" new-> "<<current_params.get_xi()<<endl;
-				log_file<<"old rho   "<<params_buffer.get_roe()  <<" new-> "<<current_params.get_roe()<<endl;
+				log_file<<"old omega "<<best_params.get_omega()<<" new -> "<<current_params.get_omega()<<endl;
+				log_file<<"old theta "<<best_params.get_theta()<<" new-> "<<current_params.get_theta()<<endl;
+				log_file<<"old xi    "<<best_params.get_xi()   <<" new-> "<<current_params.get_xi()<<endl;
+				log_file<<"old rho   "<<best_params.get_roe()  <<" new-> "<<current_params.get_roe()<<endl;
 				if(model==VAR_P)
-					log_file<<"old p     "<<params_buffer.get_p()<<" new-> "<<current_params.get_p()<<endl;
+					log_file<<"old p     "<<best_params.get_p()<<" new-> "<<current_params.get_p()<<endl;
 
 				log_file<<endl<<endl<<endl;
 
@@ -235,7 +235,7 @@ int main(int argc, char** argv) {
 				call_counter = 0;
 			} else {
 				log_file<<"Results are Normal, exiting..."<<endl;
-				mark_better_parameters(simulation_counter, max_simulations, mle, chi2, best_params, params_buffer, log_file, prices.size());
+				mark_better_parameters(simulation_counter, max_simulations, mle, chi2, current_params, best_params, log_file, prices.size());
 				break;
 			}
 		} 
@@ -247,12 +247,12 @@ int main(int argc, char** argv) {
 	residual_file<<"Prices"<<","<<"Estimates"<<","<<"Error"<<endl;
 	if(runmode==SIMPLE) {
 		log_file<<"Optimum values are "<<endl
-			<<"--omega "<<params_buffer.get_omega()<<endl
-			<<"--theta "<<params_buffer.get_theta()<<endl
-			<<"--roe   "<<params_buffer.get_roe()<<endl
-			<<"--xi    "<<params_buffer.get_xi()<<endl;
+			<<"--omega "<<current_params.get_omega()<<endl
+			<<"--theta "<<current_params.get_theta()<<endl
+			<<"--roe   "<<current_params.get_roe()<<endl
+			<<"--xi    "<<current_params.get_xi()<<endl;
 		if(model==VAR_P)
-			log_file<<"--p     "<<params_buffer.get_p()<<endl;
+			log_file<<"--p     "<<current_params.get_p()<<endl;
 		for(unsigned int i = 0; i < prices.size(); i++) {
 			residual_file<<prices[i]<<","<<exp(estimates[i])<<","<<prices[i] - exp(estimates[i])<<endl;
 		}
