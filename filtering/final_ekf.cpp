@@ -205,11 +205,11 @@ int main(int argc, char** argv) {
 				cout<<"Preturbing "<<get_VolParams_string(current_param_being_preturbed)<<endl<<endl<<endl;
 
 
-				current_params.set_omega(abs(gaussrand()) * sqrt(4.00) + best_params.get_omega());
-				current_params.set_theta(abs(gaussrand()) * sqrt(4.00) + best_params.get_theta());
-				current_params.set_xi(abs(gaussrand()) * sqrt(4.00) + best_params.get_xi());
+				current_params.set_omega(abs(gaussrand() * sqrt(4.00) + best_params.get_omega()));
+				current_params.set_theta(abs(gaussrand() * sqrt(4.00) + best_params.get_theta()));
+				current_params.set_xi(abs(gaussrand() * sqrt(4.00) + best_params.get_xi()));
 				current_params.set_roe(((rand()/rand_max) * 2.00) - 1.00);
-				current_params.set_p(abs(((double)rand())/rand_max) + 0.5);
+				current_params.set_p(abs(((double)rand())/rand_max) + 0.5); 
 				
 				
 				/*
