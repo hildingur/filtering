@@ -182,7 +182,8 @@ int main(int argc, char** argv) {
 			if(!is_normal(residuals, prices.size(), chi2)) 
 			{
  
-				if(best_params.get_mle() > mle && best_params.get_chi2() > chi2)
+				//if(best_params.get_mle() > mle && best_params.get_chi2() > chi2)
+				if(best_params.get_mle() > mle)
 				{
 					solution_improved = true;
 					mark_better_parameters(simulation_counter, max_simulations, mle, chi2, best_params, params_buffer, log_file, prices.size());
@@ -197,7 +198,6 @@ int main(int argc, char** argv) {
 				}
 
 				
-				//Preturbing omega, theta and xi with N(0,2), rho with U(-0.9, 0.9) and p with U(0.5,1.5)
 				current_param_being_preturbed = get_next_VolParam_to_preturb(current_param_being_preturbed, 
 					solution_improved, 
 					model);
@@ -207,18 +207,18 @@ int main(int argc, char** argv) {
 				
 				switch(current_param_being_preturbed)
 				{
-				case OMEGA: current_params.set_omega(gaussrand() * sqrt(2.00) + params_buffer.get_omega());
+				case OMEGA: current_params.set_omega(abs(gaussrand()) * sqrt(2.00) + params_buffer.get_omega());
 					break;
-				case THETA: current_params.set_theta(gaussrand() * sqrt(2.00) + params_buffer.get_theta());
+				case THETA: current_params.set_theta(abs(gaussrand()) * sqrt(2.00) + params_buffer.get_theta());
 					break;
 				case XI:
-					current_params.set_xi(gaussrand() * sqrt(2.00) + params_buffer.get_xi());
+					current_params.set_xi(abs(gaussrand()) * sqrt(2.00) + params_buffer.get_xi());
 					break;
 				case ROE:
-					current_params.set_roe(((rand()/rand_max) * 2.00) - 1.00);
+					current_params.set_roe((abs(rand()/rand_max) * 2.00) - 1.00);
 					break;
 				case VAR_P:
-					current_params.set_p((((double)rand())/rand_max) + 0.5);
+					current_params.set_p(abs(((double)rand())/rand_max) + 0.5);
 					break;
 				}
 				
@@ -380,7 +380,12 @@ DP minimize_target_ekf(Vec_I_DP & input)
 		mle+=(log(v[i1])+u[i1]*u[i1]/v[i1]);
 
 	//test for nan
-	if(mle!=mle || abs(rho) > 0.95 || abs(p) > 3)
+	if(mle!=mle || 
+		rho > 0.95 || rho < 0.01
+		|| omega < 0
+		|| xi < 0
+		|| theta < 0
+		|| abs(p) > 3)
 		mle = pow(10.00, 5.00) + rand(); //add a random number to it so it doesn't settle there
 
 	log_parameters(omega, theta, xi, rho, p, mle);
