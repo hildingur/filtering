@@ -381,7 +381,7 @@ DP minimize_target_ekf(Vec_I_DP & input)
 
 	//test for nan
 	if(mle!=mle || 
-		rho > 0.95 || rho < 0.01
+		rho > 0.95 || rho < -0.95
 		|| omega < 0
 		|| xi < 0
 		|| theta < 0
