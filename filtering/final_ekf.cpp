@@ -221,7 +221,7 @@ int main(int argc, char** argv) {
 					current_params.set_p(abs(((double)rand())/rand_max) + 0.5);
 					break;
 				}
-				
+
 				log_file<<"old omega "<<best_params.get_omega()<<" new -> "<<current_params.get_omega()<<" diff= "<<best_params.get_omega() - current_params.get_omega()<<endl;
 				log_file<<"old theta "<<best_params.get_theta()<<" new-> "<<current_params.get_theta()<<" diff= "<<best_params.get_theta() - current_params.get_theta()<<endl;
 				log_file<<"old xi    "<<best_params.get_xi()   <<" new-> "<<current_params.get_xi()<<" diff= "<<best_params.get_xi() - current_params.get_xi()<<endl;
