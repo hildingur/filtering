@@ -207,12 +207,12 @@ int main(int argc, char** argv) {
 				
 				switch(current_param_being_preturbed)
 				{
-				case OMEGA: current_params.set_omega(abs(gaussrand()) * sqrt(2.00) + best_params.get_omega());
+				case OMEGA: current_params.set_omega(abs(gaussrand()) * sqrt(4.00) + best_params.get_omega());
 					break;
-				case THETA: current_params.set_theta(abs(gaussrand()) * sqrt(2.00) + best_params.get_theta());
+				case THETA: current_params.set_theta(abs(gaussrand()) * sqrt(4.00) + best_params.get_theta());
 					break;
 				case XI:
-					current_params.set_xi(abs(gaussrand()) * sqrt(2.00) + best_params.get_xi());
+					current_params.set_xi(abs(gaussrand()) * sqrt(4.00) + best_params.get_xi());
 					break;
 				case ROE:
 					current_params.set_roe(((rand()/rand_max) * 2.00) - 1.00);
@@ -222,12 +222,12 @@ int main(int argc, char** argv) {
 					break;
 				}
 				
-				log_file<<"old omega "<<best_params.get_omega()<<" new -> "<<current_params.get_omega()<<endl;
-				log_file<<"old theta "<<best_params.get_theta()<<" new-> "<<current_params.get_theta()<<endl;
-				log_file<<"old xi    "<<best_params.get_xi()   <<" new-> "<<current_params.get_xi()<<endl;
-				log_file<<"old rho   "<<best_params.get_roe()  <<" new-> "<<current_params.get_roe()<<endl;
+				log_file<<"old omega "<<best_params.get_omega()<<" new -> "<<current_params.get_omega()<<" diff= "<<best_params.get_omega() - current_params.get_omega()<<endl;
+				log_file<<"old theta "<<best_params.get_theta()<<" new-> "<<current_params.get_theta()<<" diff= "<<best_params.get_theta() - current_params.get_theta()<<endl;
+				log_file<<"old xi    "<<best_params.get_xi()   <<" new-> "<<current_params.get_xi()<<" diff= "<<best_params.get_xi() - current_params.get_xi()<<endl;
+				log_file<<"old rho   "<<best_params.get_roe()  <<" new-> "<<current_params.get_roe()<<" diff= "<<best_params.get_roe() - current_params.get_roe()<<endl;
 				if(model==VAR_P)
-					log_file<<"old p     "<<best_params.get_p()<<" new-> "<<current_params.get_p()<<endl;
+					log_file<<"old p     "<<best_params.get_p()<<" new-> "<<current_params.get_p()<<" diff= "<<best_params.get_p() - current_params.get_p()<<endl;
 
 				log_file<<endl<<endl<<endl;
 
