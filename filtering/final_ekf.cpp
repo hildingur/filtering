@@ -198,13 +198,6 @@ int main(int argc, char** argv) {
 				}
 
 				
-				current_param_being_preturbed = get_next_VolParam_to_preturb(current_param_being_preturbed, 
-					solution_improved, 
-					model);
-
-				cout<<"Preturbing "<<get_VolParams_string(current_param_being_preturbed)<<endl<<endl<<endl;
-
-
 				current_params.set_omega(abs(gaussrand() * sqrt(4.00) + best_params.get_omega()));
 				current_params.set_theta(abs(gaussrand() * sqrt(4.00) + best_params.get_theta()));
 				current_params.set_xi(abs(gaussrand() * sqrt(4.00) + best_params.get_xi()));
@@ -213,6 +206,15 @@ int main(int argc, char** argv) {
 				
 				
 				/*
+				current_param_being_preturbed = get_next_VolParam_to_preturb(current_param_being_preturbed, 
+					solution_improved, 
+					model);
+
+				cout<<"Preturbing "<<get_VolParams_string(current_param_being_preturbed)<<endl<<endl<<endl;
+
+
+
+
 				switch(current_param_being_preturbed)
 				{
 				case OMEGA: current_params.set_omega(abs(gaussrand()) * sqrt(4.00) + best_params.get_omega());
