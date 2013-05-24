@@ -11,3 +11,6 @@ filtering/Debug
 filtering/bin
 *.pdf
 Release/
+output/*csv
+*swp
+./filtering//log_*

@@ -53,12 +53,32 @@ public:
 
 void read_lines(string& fname, vector<double>& out);
 
+/*
+Builds the residuals using the classical definition, i.e. residual[i] = actual[i] - estimate[i];
+*/
+void build_classic_residuals(const vector<double>& actual, const double* log_estimate, double* residual);
+
+/*
+builds the residual as specified on page 95 of Alireza Javaheri's book.
+i.e. residual[i] = (actual[i] - estimate[i]) / v[i];
+*/
+void build_kalman_residuals(const vector<double>& actual, const double* log_estimate, const double* v, double* residual);
+
+/*
+builds the residual as specified on page 95 of Alireza Javaheri's book, but subtracts the mean.
+residual[i] = (actual[i] - estimate[i] - u[i]) / v[i];
+*/
+void build_mean_corrected_kalman_residuals(const vector<double>& actual, const double* log_estimate, const double* u, const double* v, double* residual);
+
+/*
+utility function for UKF
+*/
 int sqrt_matrix(double** pa, double** proda, int& N);
 
 /**
 Checks to see if the data is normal using the chi squared test with 20 degrees of freedom and alpha = 0.05
 */
-bool is_normal(double* data, int data_count, double& chi2_);
+bool is_normal(const double* data, bool normalize, int data_count, double& chi2_);
 
 double cumulative_normal(const double x);
 

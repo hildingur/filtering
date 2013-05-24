@@ -48,6 +48,12 @@ void parse_args(int argc, char** argv,
 	string& parameter_file_name,
 	string& residual_file_name);
 
+void log_stats(ofstream& lf,
+	const double* classic_residuals,
+	const double* kalman_residuals,
+	const double* kalman_residuals_corrected,
+	const int count);
+
 DP minimize_target_ekf(Vec_I_DP & input);
 
 void log_parameters(double& omega,
@@ -136,7 +142,9 @@ int main(int argc, char** argv) {
 	residual_file<<setprecision(10);
 
 	VolParams current_param_being_preturbed = OMEGA;
-	double* residuals = new double[prices.size()];
+	double* classic_residuals = new double[prices.size()];
+	double* kalman_residuals = new double[prices.size()];
+	double* corrected_kalman_residuals = new double[prices.size()];
 	
 	while(simulation_counter <= max_simulations)
 	{
@@ -168,29 +176,39 @@ int main(int argc, char** argv) {
 		if(model==VAR_P)
 			cout<<" p = "<<current_params.get_p();
 		cout<<endl<<endl;
+
+		build_classic_residuals(prices, estimates, classic_residuals);
+                build_kalman_residuals(prices, estimates, v, kalman_residuals);
+                build_mean_corrected_kalman_residuals(prices, estimates, u, v, corrected_kalman_residuals);
+
 		
 		if(runmode == NORMAL_RESIDUALS) 
 		{
 			bool solution_improved = false;
 
-			for(unsigned int i = 0; i < prices.size(); i++) {
-				residuals[i] = prices[i] - exp(estimates[i]);
-			}
-
 			double chi2;
 
-			if(!is_normal(residuals, prices.size(), chi2)) 
+			if(!is_normal(classic_residuals, true, prices.size(), chi2)) 
 			{
  
 				//if(best_params.get_mle() > mle && best_params.get_chi2() > chi2)
-				if(best_params.get_mle() > mle)
+				//if(best_params.get_mle() > mle)a
+				if(best_params.get_chi2() > chi2)
 				{
 					solution_improved = true;
-					mark_better_parameters(simulation_counter, max_simulations, mle, chi2, best_params, current_params, log_file, prices.size());
+					mark_better_parameters(simulation_counter, 
+						max_simulations, 
+						mle, 
+						chi2, 
+						best_params, 
+						current_params, 
+						log_file, 
+						prices.size());
 				} 
 				else 
 				{
-					log_file<<"We have NOT found better parameters on simulation # "<<simulation_counter << " out of "<< max_simulations <<endl
+					log_file<<"We have NOT found better parameters on simulation # "<<simulation_counter 
+						<< " out of "<< max_simulations <<endl
 						<<"-- new mle = "<< mle <<" old mle = "<<best_params.get_mle()
 						<<"-- new chi2 = "<<chi2<<" old chi2 = "<<best_params.get_chi2()<<endl
 						<<"-- Resetting the parameters to the previous best estimate, and then preturbing..."<<endl;
@@ -198,47 +216,28 @@ int main(int argc, char** argv) {
 				}
 
 				
-				current_params.set_omega(abs(gaussrand() * sqrt(4.00) + best_params.get_omega()));
-				current_params.set_theta(abs(gaussrand() * sqrt(4.00) + best_params.get_theta()));
-				current_params.set_xi(abs(gaussrand() * sqrt(4.00) + best_params.get_xi()));
+				current_params.set_omega(abs(gaussrand() * sqrt(2.00) + best_params.get_omega()));
+				current_params.set_theta(abs(gaussrand() * sqrt(2.00) + best_params.get_theta()));
+				current_params.set_xi(abs(gaussrand() * sqrt(2.00) + best_params.get_xi()));
 				current_params.set_roe(((rand()/rand_max) * 2.00) - 1.00);
 				current_params.set_p(abs(((double)rand())/rand_max) + 0.5); 
-				
-				
-				/*
-				current_param_being_preturbed = get_next_VolParam_to_preturb(current_param_being_preturbed, 
-					solution_improved, 
-					model);
 
-				cout<<"Preturbing "<<get_VolParams_string(current_param_being_preturbed)<<endl<<endl<<endl;
-
-
-
-
-				switch(current_param_being_preturbed)
-				{
-				case OMEGA: current_params.set_omega(abs(gaussrand()) * sqrt(4.00) + best_params.get_omega());
-					break;
-				case THETA: current_params.set_theta(abs(gaussrand()) * sqrt(4.00) + best_params.get_theta());
-					break;
-				case XI:
-					current_params.set_xi(abs(gaussrand()) * sqrt(4.00) + best_params.get_xi());
-					break;
-				case ROE:
-					current_params.set_roe(((rand()/rand_max) * 2.00) - 1.00);
-					break;
-				case VAR_P:
-					current_params.set_p(abs(((double)rand())/rand_max) + 0.5);
-					break;
-				}
-				*/
-
-				log_file<<"old omega "<<best_params.get_omega()<<" new -> "<<current_params.get_omega()<<" diff= "<<best_params.get_omega() - current_params.get_omega()<<endl;
-				log_file<<"old theta "<<best_params.get_theta()<<" new-> "<<current_params.get_theta()<<" diff= "<<best_params.get_theta() - current_params.get_theta()<<endl;
-				log_file<<"old xi    "<<best_params.get_xi()   <<" new-> "<<current_params.get_xi()<<" diff= "<<best_params.get_xi() - current_params.get_xi()<<endl;
-				log_file<<"old rho   "<<best_params.get_roe()  <<" new-> "<<current_params.get_roe()<<" diff= "<<best_params.get_roe() - current_params.get_roe()<<endl;
+				log_file<<"old omega "<<best_params.get_omega()
+					<<" new -> "<<current_params.get_omega()
+					<<" diff= "<<best_params.get_omega() - current_params.get_omega()<<endl;
+				log_file<<"old theta "<<best_params.get_theta()
+					<<" new-> "<<current_params.get_theta()
+					<<" diff= "<<best_params.get_theta() - current_params.get_theta()<<endl;
+				log_file<<"old xi    "<<best_params.get_xi()   
+					<<" new-> "<<current_params.get_xi()
+					<<" diff= "<<best_params.get_xi() - current_params.get_xi()<<endl;
+				log_file<<"old rho   "<<best_params.get_roe()  
+					<<" new-> "<<current_params.get_roe()
+					<<" diff= "<<best_params.get_roe() - current_params.get_roe()<<endl;
 				if(model==VAR_P)
-					log_file<<"old p     "<<best_params.get_p()<<" new-> "<<current_params.get_p()<<" diff= "<<best_params.get_p() - current_params.get_p()<<endl;
+					log_file<<"old p     "<<best_params.get_p()
+						<<" new-> "<<current_params.get_p()<<" diff= "
+						<<best_params.get_p() - current_params.get_p()<<endl;
 
 				log_file<<endl<<endl<<endl;
 
@@ -254,8 +253,21 @@ int main(int argc, char** argv) {
 		simulation_counter++;
 		paramter_file.flush(); //flush the buffer to disc
 	}
+
+	log_file<<"Optimum values are "<<endl
+                <<"--omega "<<current_params.get_omega()<<endl
+                <<"--theta "<<current_params.get_theta()<<endl
+                <<"--roe   "<<current_params.get_roe()<<endl
+                <<"--xi    "<<current_params.get_xi()<<endl;
+        if(model==VAR_P)
+                log_file<<"--p     "<<current_params.get_p()<<endl;
 	
-	residual_file<<"Prices"<<","<<"Estimates"<<","<<"Error"<<endl;
+	residual_file<<"LineNum"<<","
+		<<"Prices"<<","
+		<<"Estimates"<<","
+		<<"ClassicResidual"<<","
+		<<"KalmanResidual"<<","
+		<<"CorrectedKalmanResidual"<<endl;
 	if(runmode==SIMPLE) {
 		log_file<<"Optimum values are "<<endl
 			<<"--omega "<<current_params.get_omega()<<endl
@@ -265,9 +277,27 @@ int main(int argc, char** argv) {
 		if(model==VAR_P)
 			log_file<<"--p     "<<current_params.get_p()<<endl;
 		for(unsigned int i = 0; i < prices.size(); i++) {
-			residual_file<<prices[i]<<","<<exp(estimates[i])<<","<<prices[i] - exp(estimates[i])<<endl;
+			residual_file<<i<<"."<<prices[i]<<","<<exp(estimates[i])<<","
+				<<classic_residuals[i]<<","
+				<<kalman_residuals[i]<<","
+				<<corrected_kalman_residuals[i]<<","
+				<<endl;
 		}
 	} else {
+		//need to build the residuals again.
+		build_classic_residuals(prices, 
+			best_params.get_estimates(), 
+			classic_residuals);
+                build_kalman_residuals(prices, 
+			best_params.get_estimates(), 
+			best_params.get_v(), 
+			kalman_residuals);
+                build_mean_corrected_kalman_residuals(prices, 
+			best_params.get_estimates(), 
+			best_params.get_u(), 
+			best_params.get_v(), 
+			corrected_kalman_residuals);
+
 		log_file<<"Optimum values are "<<endl
 			<<"--omega "<<best_params.get_omega()<<endl
 			<<"--theta "<<best_params.get_theta()<<endl
@@ -276,14 +306,25 @@ int main(int argc, char** argv) {
 		if(model==VAR_P)
 			log_file<<"--p     "<<best_params.get_p()<<endl;
 		for(unsigned int i = 0; i < prices.size(); i++) {
-			residual_file<<prices[i]<<","<<exp(best_params.get_estimates()[i])<<","<<prices[i] - exp(best_params.get_estimates()[i])<<endl;
+			residual_file<<i<<","<<prices[i]<<","
+				<<exp(estimates[i])<<","
+				<<classic_residuals[i]<<","
+                                <<kalman_residuals[i]<<","
+                                <<corrected_kalman_residuals[i]<<","
+                                <<endl;
 		}
 	}
+
+	log_stats(log_file,
+		classic_residuals,
+		kalman_residuals,
+		corrected_kalman_residuals,
+		prices.size());
 
 	residual_file.close();
 	paramter_file.close();
 
-	delete[] log_stock_prices, u, v, estimates, residuals;
+	delete[] log_stock_prices, u, v, estimates, classic_residuals, kalman_residuals, corrected_kalman_residuals;
 	delete start_, identity_matrix;
 	/*
 	cout<<"Press any key to continue"<<endl;
@@ -292,6 +333,35 @@ int main(int argc, char** argv) {
 	return 0;
 }
 
+void log_stats(ofstream& lf,
+        const double* classic_residuals,
+        const double* kalman_residuals,
+        const double* kalman_residuals_corrected,
+        const int count)
+{
+	double classic_chi2, kalman_chi2, kalman_corrected_chi2,
+		classic_chi2_normalized, kalman_chi2_normalized, kalman_corrected_chi2_normalized;
+	
+
+	is_normal(classic_residuals, true, count, classic_chi2_normalized);
+	is_normal(classic_residuals, false, count, classic_chi2);
+
+	is_normal(kalman_residuals, true, count, kalman_chi2_normalized);
+        is_normal(kalman_residuals, false, count, kalman_chi2);
+
+	is_normal(kalman_residuals_corrected, true, count, kalman_corrected_chi2_normalized);
+	is_normal(kalman_residuals_corrected, false, count, kalman_corrected_chi2);
+
+	lf << " classic_chi2                      "<<classic_chi2<<"\n"
+		<< " classic_chi2_normalied            "<<classic_chi2_normalized<<"\n"
+		<< " kalman_chi2                       "<<kalman_chi2<<"\n"
+		<< " kalman_chi2_normalized            "<<kalman_chi2_normalized<<"\n"
+		<< " kalman_corrected_chi2             "<<kalman_corrected_chi2<<"\n"
+                << " kalman_corrected_chi2_normalized  "<<kalman_corrected_chi2_normalized<<endl;
+
+
+	
+}
 void parse_args(int argc, char** argv,
 	string& input_file_name,
 	string& parameter_file_name,

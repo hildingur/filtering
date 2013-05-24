@@ -53,7 +53,7 @@ int sqrt_matrix(double** pa, double** proda, int& N)
 /**
 Checks to see if the data is normal using the k-s test
 */
-bool is_normal(double* data, int data_count, double& chi2_)
+bool is_normal(const double* data, bool normalize, int data_count, double& chi2_)
 {
 	const int bin_count = 22;
 	const int edge_count = bin_count - 1;
@@ -85,11 +85,25 @@ bool is_normal(double* data, int data_count, double& chi2_)
 	ebins[bin_count - 1] = (1 - cumulative_normal(bin_edges[edge_count - 1])) * data_count;
 	bins[bin_count - 1] = 0;
 
+	double* normalized_data = new double[data_count];
+        if(normalize)
+        {
+         	normalize_data(data, normalized_data, data_count);
+	}
+	else //if we aren't normalizing the data, just copy it.
+	{
+		for(int i = 0; i < data_count; i++)
+		{
+			normalized_data[i] = data[i];
+		}
+       }
+
+
 	//binning the data
 	for(int i = 0; i < data_count; i++)
 	{
 		bool binned = false;
-		double num = data[i];
+		double num = normalized_data[i];
 		//iterate thru the edges looking for the appropriate bin to bin it into
 		for(int j = 0; j < edge_count; j++)
 		{
@@ -104,10 +118,6 @@ bool is_normal(double* data, int data_count, double& chi2_)
 			bins[edge_count]++;
 		}
 	}
-
-	double* normalized_data = new double[data_count];
-	normalize_data(data, normalized_data, data_count);
-	
 
 	double df, chsq, prob;
 
@@ -185,6 +195,47 @@ double gaussrand()
 
 	return X;
 }
+
+/*
+Builds the residuals using the classical definition, i.e. residual[i] = actual[i] - estimate[i];
+*/
+void build_classic_residuals(const vector<double>& actual, const double* log_estimate, double* residual)
+{
+	for(int i = 0; i < actual.size(); i++) 
+	{
+		residual[i] = actual[i] - exp(log_estimate[i]);
+	}
+}
+
+/*
+builds the residual as specified on page 95 of Alireza Javaheri's book.
+i.e. residual[i] = (actual[i] - estimate[i]) / v[i];
+*/
+void build_kalman_residuals(const vector<double>& actual, const double* log_estimate, const double* v, double* residual)
+{
+	for(int i = 0; i < actual.size(); i++)
+	{
+		residual[i] = (actual[i] - exp(log_estimate[i])) / v[i];
+	}
+}
+
+/*
+builds the residual as specified on page 95 of Alireza Javaheri's book, but subtracts the mean.
+residual[i] = (actual[i] - estimate[i] - u[i]) / v[i];
+*/
+void build_mean_corrected_kalman_residuals(const vector<double>& actual, const double* log_estimate, const double* u, const double* v, double* residual)
+{
+	for(int i = 0; i < actual.size(); i++)
+	{
+		residual[i] = (actual[i] - exp(log_estimate[i]) - u[i]) / v[i];
+	}
+}
+
+
+
+/********************************
+From here until the end of the file, the methods of vol_params are implemented.
+********************************/
 
 double vol_params::get_omega()
 {
