@@ -112,8 +112,8 @@ int main(int argc, char** argv) {
 		log_stock_prices[i] = log(prices[i]);
 	}
 
-	//param variables are omega, theta, rho, p, mle, chi_squared_statistic 
-	vol_params current_params(0.2, 1.00, 0.50, -0.20, 1.00, pow(10.00, 6), pow(10.00, 6));
+	//param variables are    omega, theta, xi,    rho,  p,    mle,           chi_squared_statistic 
+	vol_params current_params(0.02, 1.00,  0.50, -0.20, 1.00, pow(10.00, 6), pow(10.00, 6));
 	vol_params best_params(current_params);
 	
 	Vec_IO_DP* start_;
@@ -191,9 +191,9 @@ int main(int argc, char** argv) {
 			if(!is_normal(classic_residuals, true, prices.size(), chi2)) 
 			{
  
-				//if(best_params.get_mle() > mle && best_params.get_chi2() > chi2)
 				//if(best_params.get_mle() > mle)a
-				if(best_params.get_chi2() > chi2)
+				//if(best_params.get_chi2() > chi2)
+				if(best_params.get_mle() > mle && best_params.get_chi2() > chi2)
 				{
 					solution_improved = true;
 					mark_better_parameters(simulation_counter, 
@@ -369,7 +369,7 @@ void parse_args(int argc, char** argv,
 
 	string usage = "syntax is program_name <input_file> <parameter_output_file> <residual_output_file> "
 		"<MODEL 1=HESTON, 2=GARCH, 3=3_2, 4=variable p> "
-		"<RUNMODE 1=SIMPLE, 2=NORMAL_RESIDUALS, 3=UNCORRELATED_RESIDUALS, 4 = NORMAL_AND_UNCORRELATED_RESIDUALS>. "
+		"<RUNMODE 1=SIMPLE, 2=NORMAL_RESIDUALS>. "
 		"<MAXSIMULATIONS: Required if RUNMODE!=1> \n "
 		"The input file should be a 1 columned csv price file, the output file(s) will be created";
 
@@ -401,10 +401,8 @@ void parse_args(int argc, char** argv,
 			throw "model is not one of 1,2,3,4. Usage is \n" + usage;
 
 		if(runmode_!="1" &&
-			runmode_!="2" &&
-			runmode_!="3" &&
-			runmode_!="4")
-			throw "runmode is not one of 1,2,3,4. Usage is \n" + usage;
+			runmode_!="2")
+			throw "runmode is not one of 1,2. Usage is \n" + usage;
 
 		if(runmode_!="1" && argc!=7)
 			throw "RUNMODE!=1 and MAXSIMULATIONS not provided";

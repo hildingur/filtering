@@ -14,3 +14,6 @@ Release/
 output/*csv
 *swp
 ./filtering//log_*
+io/*
+filtering/io/*
+filtering/log_*
