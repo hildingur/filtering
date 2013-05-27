@@ -36,7 +36,7 @@ ofstream paramter_file;
 ofstream residual_file;
 ofstream log_file;
 
-DP ftol = 1.00e-6;
+DP ftol = 1.00e-7;
 
 
 void init_log(const VolModel model, const RunMode runmode, ofstream& log_stream);
