@@ -267,6 +267,16 @@ double vol_params::get_mle()
 	return mle;
 }
 
+double vol_params::get_kalman_chi2()
+{
+	return kalman_chi2;
+}
+
+double vol_params::get_adjusted_kalman_chi2()
+{
+	return adjusted_kalman_chi2;
+}
+
 double vol_params::get_chi2()
 {
 	return chi2;
@@ -307,6 +317,16 @@ void vol_params::set_chi2(double chi2_)
 	chi2 = chi2_;
 }
 
+void vol_params::set_kalman_chi2(double kalman_chi2_)
+{
+	kalman_chi2 = kalman_chi2_;
+}
+
+void vol_params::set_adjusted_kalman_chi2(double adjusted_kalman_chi2_)
+{
+	adjusted_kalman_chi2 = adjusted_kalman_chi2_;
+}
+
 void vol_params::copy_params(vol_params& params)
 {
 	omega = params.omega;
@@ -332,7 +352,15 @@ vol_params::vol_params()
 
 }
 
-vol_params::vol_params(double omega_, double theta_, double xi_, double roe_, double p_, double mle_, double chi2_)
+vol_params::vol_params(double omega_, 
+	double theta_, 
+	double xi_, 
+	double roe_, 
+	double p_, 
+	double mle_, 
+	double chi2_,
+	double kalman_chi2_,
+	double adjusted_kalman_chi2_)
 {
 	u = NULL;
 	v = NULL;
@@ -345,6 +373,8 @@ vol_params::vol_params(double omega_, double theta_, double xi_, double roe_, do
 	roe = roe_;
 	theta = theta_;
 	xi = xi_;
+	kalman_chi2 = kalman_chi2_;
+	adjusted_kalman_chi2 = adjusted_kalman_chi2_;
 }
 
 //copy constructor
@@ -383,16 +413,16 @@ void vol_params::extract_params_from_vector(Vec_IO_DP& v)
 		p = v[4];
 }
 
-void vol_params::set_best_estimate(const vol_params& params, 
-		const double mle_, 
-		const double chi2_, 
+void vol_params::set_best_estimate(const vol_params& params,
 		const double* u_,
 		const double* v_,
 		const double* estimates_,
 		const int size) 
 {
-	mle = mle_;
-	chi2 = chi2_;
+	mle = params.mle;
+	chi2 = params.chi2;
+	kalman_chi2 = params.kalman_chi2;
+	adjusted_kalman_chi2 = params.adjusted_kalman_chi2;
 
 	if(u == NULL) {
 		u = new double[size];

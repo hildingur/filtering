@@ -65,8 +65,6 @@ void log_parameters(double& omega,
 
 void mark_better_parameters(int& simulation_counter,
 	int& max_simulations,
-	double& new_mle,
-	double& new_chi2,
 	vol_params& current_best_params,
 	vol_params& new_best_params,
 	ofstream& log_stream,
@@ -112,8 +110,17 @@ int main(int argc, char** argv) {
 		log_stock_prices[i] = log(prices[i]);
 	}
 
-	//param variables are    omega, theta, xi,    rho,  p,    mle,           chi_squared_statistic 
-	vol_params current_params(0.02, 1.00,  0.50, -0.20, 1.00, pow(10.00, 6), pow(10.00, 6));
+	//param variables are
+	vol_params current_params(0.02, //omega
+		1.00,  //theta
+		0.50, //xi
+		-0.20, //rho
+		1.00,  //p
+		pow(10.00, 6), //mle
+		pow(10.00, 6), //chi2
+		pow(10.00, 6), //kalman_chi2
+		pow(10.00, 6) //(mean) adjusted_kalman_chi2 
+		); 
 	vol_params best_params(current_params);
 	
 	Vec_IO_DP* start_;
@@ -145,6 +152,8 @@ int main(int argc, char** argv) {
 	double* classic_residuals = new double[prices.size()];
 	double* kalman_residuals = new double[prices.size()];
 	double* corrected_kalman_residuals = new double[prices.size()];
+
+	double chi2;
 	
 	while(simulation_counter <= max_simulations)
 	{
@@ -167,8 +176,6 @@ int main(int argc, char** argv) {
 		NR::powell(start, *identity_matrix, ftol, iter, mle, minimize_target_ekf);
 		cout<<"Ran in "<<call_counter<<" iterations with return value "<<mle<<endl;
 		
-		current_params.extract_params_from_vector(start);
-
 		cout<<"Parameters are "<<" omega = "<<current_params.get_omega()
 					<<" theta = "<<current_params.get_theta()
 					<<" xi = "<<current_params.get_xi()
@@ -177,76 +184,75 @@ int main(int argc, char** argv) {
 			cout<<" p = "<<current_params.get_p();
 		cout<<endl<<endl;
 
+		/*
+		* Setting the current params out of the optimizations.
+		*/
+		current_params.extract_params_from_vector(start);
+		current_params.set_mle(mle);
+
 		build_classic_residuals(prices, estimates, classic_residuals);
         build_kalman_residuals(prices, estimates, v, kalman_residuals);
         build_mean_corrected_kalman_residuals(prices, estimates, u, v, corrected_kalman_residuals);
+		//getting the chi2 statistic for the classic residuals
+		is_normal(classic_residuals, true, prices.size(), chi2); current_params.set_chi2(chi2);
+		is_normal(kalman_residuals, true, prices.size(), chi2); current_params.set_kalman_chi2(chi2);
+		is_normal(corrected_kalman_residuals, true, prices.size(), chi2); current_params.set_adjusted_kalman_chi2(chi2);
 
 		if(runmode == NORMAL_RESIDUALS) 
 		{
 			bool solution_improved = false;
 
-			double chi2;
-
-			if(!is_normal(classic_residuals, true, prices.size(), chi2)) 
+			//if(best_params.get_mle() > mle)a
+			//if(best_params.get_chi2() > chi2)
+			if(best_params.get_mle() > mle && best_params.get_kalman_chi2() > current_params.get_kalman_chi2())
 			{
- 
-				//if(best_params.get_mle() > mle)a
-				//if(best_params.get_chi2() > chi2)
-				if(best_params.get_mle() > mle && best_params.get_chi2() > chi2)
-				{
-					solution_improved = true;
-					mark_better_parameters(simulation_counter, 
-						max_simulations, 
-						mle, 
-						chi2, 
-						best_params, 
-						current_params, 
-						log_file, 
-						prices.size());
-				} 
-				else 
-				{
-					log_file<<"We have NOT found better parameters on simulation # "<<simulation_counter 
-						<< " out of "<< max_simulations <<endl
-						<<"-- new mle = "<< mle <<" old mle = "<<best_params.get_mle()
-						<<"-- new chi2 = "<<chi2<<" old chi2 = "<<best_params.get_chi2()<<endl
-						<<"-- Resetting the parameters to the previous best estimate, and then preturbing..."<<endl;
-					current_params.copy_params(best_params);
-				}
+				solution_improved = true;
+				mark_better_parameters(simulation_counter, 
+					max_simulations,
+					best_params, 
+					current_params, 
+					log_file, 
+					prices.size());
+			} 
+			else 
+			{
+				log_file<<"We have NOT found better parameters on simulation # "<<simulation_counter 
+					<< " out of "<< max_simulations <<endl
+					<<"-- new mle = "<< mle <<" old mle = "<<best_params.get_mle()<<endl
+					<<"-- new chi2 = "<<chi2<<" old chi2 = "<<best_params.get_chi2()<<endl
+					<<"-- Resetting the parameters to the previous best estimate, and then preturbing..."<<endl;
+				current_params.copy_params(best_params);
+			}
 
 				
-				current_params.set_omega(abs(gaussrand() * sqrt(2.00) + best_params.get_omega()));
-				current_params.set_theta(abs(gaussrand() * sqrt(2.00) + best_params.get_theta()));
-				current_params.set_xi(abs(gaussrand() * sqrt(2.00) + best_params.get_xi()));
-				current_params.set_roe(((rand()/rand_max) * 2.00) - 1.00);
-				current_params.set_p(abs(((double)rand())/rand_max) + 0.5); 
+			current_params.set_omega(abs(gaussrand() * sqrt(2.00) + best_params.get_omega()));
+			current_params.set_theta(abs(gaussrand() * sqrt(2.00) + best_params.get_theta()));
+			current_params.set_xi(abs(gaussrand() * sqrt(2.00) + best_params.get_xi()));
+			current_params.set_roe(((rand()/rand_max) * 2.00) - 1.00);
+			current_params.set_p(abs(((double)rand())/rand_max) + 0.5); 
 
-				log_file<<"old omega "<<best_params.get_omega()
-					<<" new -> "<<current_params.get_omega()
-					<<" diff= "<<best_params.get_omega() - current_params.get_omega()<<endl;
-				log_file<<"old theta "<<best_params.get_theta()
-					<<" new-> "<<current_params.get_theta()
-					<<" diff= "<<best_params.get_theta() - current_params.get_theta()<<endl;
-				log_file<<"old xi    "<<best_params.get_xi()   
-					<<" new-> "<<current_params.get_xi()
-					<<" diff= "<<best_params.get_xi() - current_params.get_xi()<<endl;
-				log_file<<"old rho   "<<best_params.get_roe()  
-					<<" new-> "<<current_params.get_roe()
-					<<" diff= "<<best_params.get_roe() - current_params.get_roe()<<endl;
-				if(model==VAR_P)
-					log_file<<"old p     "<<best_params.get_p()
-						<<" new-> "<<current_params.get_p()<<" diff= "
-						<<best_params.get_p() - current_params.get_p()<<endl;
+			log_file<<"old omega "<<best_params.get_omega()
+				<<" new -> "<<current_params.get_omega()
+				<<" diff= "<<best_params.get_omega() - current_params.get_omega()<<endl;
+			log_file<<"old theta "<<best_params.get_theta()
+				<<" new-> "<<current_params.get_theta()
+				<<" diff= "<<best_params.get_theta() - current_params.get_theta()<<endl;
+			log_file<<"old xi    "<<best_params.get_xi()   
+				<<" new-> "<<current_params.get_xi()
+				<<" diff= "<<best_params.get_xi() - current_params.get_xi()<<endl;
+			log_file<<"old rho   "<<best_params.get_roe()  
+				<<" new-> "<<current_params.get_roe()
+				<<" diff= "<<best_params.get_roe() - current_params.get_roe()<<endl;
+			if(model==VAR_P)
+				log_file<<"old p     "<<best_params.get_p()
+					<<" new-> "<<current_params.get_p()<<" diff= "
+					<<best_params.get_p() - current_params.get_p()<<endl;
 
-				log_file<<endl<<endl<<endl;
+			log_file<<endl<<endl<<endl;
 
 
-				call_counter = 0;
-			} else {
-				log_file<<"Results are Normal, exiting..."<<endl;
-				mark_better_parameters(simulation_counter, max_simulations, mle, chi2, current_params, best_params, log_file, prices.size());
-				break;
-			}
+			call_counter = 0;
+			
 		} 
 		
 		simulation_counter++;
@@ -556,8 +562,6 @@ string get_model_name(const VolModel model)
 
 void mark_better_parameters(int& simulation_counter,
 	int& max_simulations,
-	double& new_mle,
-	double& new_chi2,
 	vol_params& current_best_params,
 	vol_params& new_best_params,
 	ofstream& log_stream,
@@ -565,17 +569,19 @@ void mark_better_parameters(int& simulation_counter,
 {
 	log_stream<<"mark_better_parameters: We have found better parameters on simulation # "<<simulation_counter 
 		<< " out of "<< max_simulations <<" on model "<<get_model_name(model)<<endl
-		<<"mark_better_parameters: "<<" new mle   = "<< new_mle                    <<" old mle   = "<<current_best_params.get_mle()<<endl
-		<<"mark_better_parameters: "<<" new chi2  = "<<new_chi2                    <<" old chi2  = "<<current_best_params.get_chi2()<<endl
-		<<"mark_better_parameters: "<<" new omega = "<<new_best_params.get_omega() <<" old omega = "<<current_best_params.get_omega()<<endl
-		<<"mark_better_parameters: "<<" new theta = "<<new_best_params.get_theta() <<" old theta = "<<current_best_params.get_theta()<<endl
-		<<"mark_better_parameters: "<<" new xi    = "<<new_best_params.get_xi()    <<" old xi    = "<<current_best_params.get_xi()<<endl
-		<<"mark_better_parameters: "<<" new roe   = "<<new_best_params.get_roe()   <<" old roe   = "<<current_best_params.get_roe()<<endl;
+		<<"mark_better_parameters: "<<" new mle                    = "<<new_best_params.get_mle()          <<" old = "<<current_best_params.get_mle()<<endl
+		<<"mark_better_parameters: "<<" new traditional chi2       = "<<new_best_params.get_chi2()         <<" old = "<<current_best_params.get_chi2()<<endl
+		<<"mark_better_parameters: "<<" new kalman chi2            = "<<new_best_params.get_kalman_chi2()  <<" old = "<<current_best_params.get_kalman_chi2()<<endl
+		<<"mark_better_parameters: "<<" new mean adj. kalman chi2  = "<<new_best_params.get_adjusted_kalman_chi2()  <<" old = "<<current_best_params.get_adjusted_kalman_chi2()<<endl
+		<<"mark_better_parameters: "<<" new omega                  = "<<new_best_params.get_omega()        <<" old = "<<current_best_params.get_omega()<<endl
+		<<"mark_better_parameters: "<<" new theta                  = "<<new_best_params.get_theta()        <<" old = "<<current_best_params.get_theta()<<endl
+		<<"mark_better_parameters: "<<" new xi                     = "<<new_best_params.get_xi()           <<" old = "<<current_best_params.get_xi()<<endl
+		<<"mark_better_parameters: "<<" new roe                    = "<<new_best_params.get_roe()          <<" old = "<<current_best_params.get_roe()<<endl;
 	if(model==VAR_P)
-		log_stream<<"mark_better_parameters: "<<" new p     = "<<new_best_params.get_p()   <<" old p     = "<<current_best_params.get_p()<<endl;
+		log_stream<<"mark_better_parameters: "<<" new p                 = "<<new_best_params.get_p()   <<" old = "<<current_best_params.get_p()<<endl;
 
 	log_stream<<endl<<endl;
-	current_best_params.set_best_estimate(new_best_params, new_mle, new_chi2, u, v, estimates, price_count);
+	current_best_params.set_best_estimate(new_best_params, u, v, estimates, price_count);
 }
 
 string get_VolParams_string(VolParams& vp)

@@ -10,7 +10,15 @@ using namespace std;
 class vol_params 
 {
 private:
-	double omega, theta, xi, roe, p, mle, chi2;
+	double omega, 
+		theta, 
+		xi, 
+		roe, 
+		p, 
+		mle, 
+		chi2, 
+		kalman_chi2, 
+		adjusted_kalman_chi2;
 	double *u, *v, *estimates;
 public:
 	double get_omega();
@@ -20,6 +28,8 @@ public:
 	double get_p();
 	double get_mle();
 	double get_chi2();
+	double get_kalman_chi2();
+	double get_adjusted_kalman_chi2();
 	void set_omega(double omega_);
 	void set_theta(double theta_);
 	void set_xi(double xi_);
@@ -27,6 +37,8 @@ public:
 	void set_p(double p_);
 	void set_mle(double mle_);
 	void set_chi2(double chi2_);
+	void set_kalman_chi2(double kalman_chi2_);
+	void set_adjusted_kalman_chi2(double adjusted_kalman_chi2_);
 	void copy_params(vol_params& params);
 	
 	double* get_u();
@@ -34,7 +46,15 @@ public:
 	double* get_estimates();
 
 	vol_params();
-	vol_params(double omega_, double theta_, double xi_, double roe_, double p_, double mle_, double chi2_);
+	vol_params(double omega_, 
+		double theta_, 
+		double xi_, 
+		double roe_, 
+		double p_, 
+		double mle_, 
+		double chi2_,
+		double kalman_chi2_,
+		double adjusted_kalman_chi2_);
 	vol_params(const vol_params& copy); //copy constructor
 	/*
 	Function that populates a vector with the initial parameters of the model
@@ -42,9 +62,7 @@ public:
 	void populate_starting_vector(Vec_IO_DP& starting_vector);
 	void extract_params_from_vector(Vec_IO_DP& starting_vector);
 
-	void set_best_estimate(const vol_params& params, 
-		const double mle, 
-		const double chi2, 
+	void set_best_estimate(const vol_params& params,
 		const double* u,
 		const double* v,
 		const double* estimates,
