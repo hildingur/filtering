@@ -148,12 +148,11 @@ int main(int argc, char** argv) {
 	residual_file.setf(ios::fixed);
 	residual_file<<setprecision(10);
 
-	VolParams current_param_being_preturbed = OMEGA;
 	double* classic_residuals = new double[prices.size()];
 	double* kalman_residuals = new double[prices.size()];
 	double* corrected_kalman_residuals = new double[prices.size()];
 
-	double chi2;
+	double chi2; //buffer variable.
 	
 	while(simulation_counter <= max_simulations)
 	{
