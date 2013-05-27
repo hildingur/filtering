@@ -386,6 +386,9 @@ vol_params::vol_params(const vol_params& copy)
 
 	mle = copy.mle;
 	chi2 = copy.chi2;
+	kalman_chi2 = copy.chi2;
+	adjusted_kalman_chi2 = copy.adjusted_kalman_chi2;
+
 	omega = copy.omega;
 	p = copy.p;
 	roe = copy.roe;
