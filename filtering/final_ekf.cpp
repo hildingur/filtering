@@ -36,7 +36,7 @@ ofstream paramter_file;
 ofstream residual_file;
 ofstream log_file;
 
-DP ftol = 1.00e-8;
+DP ftol = 1.00e-6;
 
 
 void init_log(const VolModel model, const RunMode runmode, ofstream& log_stream);
@@ -178,10 +178,9 @@ int main(int argc, char** argv) {
 		cout<<endl<<endl;
 
 		build_classic_residuals(prices, estimates, classic_residuals);
-                build_kalman_residuals(prices, estimates, v, kalman_residuals);
-                build_mean_corrected_kalman_residuals(prices, estimates, u, v, corrected_kalman_residuals);
+        build_kalman_residuals(prices, estimates, v, kalman_residuals);
+        build_mean_corrected_kalman_residuals(prices, estimates, u, v, corrected_kalman_residuals);
 
-		
 		if(runmode == NORMAL_RESIDUALS) 
 		{
 			bool solution_improved = false;
@@ -254,14 +253,6 @@ int main(int argc, char** argv) {
 		paramter_file.flush(); //flush the buffer to disc
 	}
 
-	log_file<<"Optimum values are "<<endl
-                <<"--omega "<<current_params.get_omega()<<endl
-                <<"--theta "<<current_params.get_theta()<<endl
-                <<"--roe   "<<current_params.get_roe()<<endl
-                <<"--xi    "<<current_params.get_xi()<<endl;
-        if(model==VAR_P)
-                log_file<<"--p     "<<current_params.get_p()<<endl;
-	
 	residual_file<<"LineNum"<<","
 		<<"Prices"<<","
 		<<"Estimates"<<","
