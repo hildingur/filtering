@@ -173,12 +173,7 @@ int main(int argc, char** argv) {
 		DP mle = 0.00;
 		
 		NR::powell(start, *identity_matrix, ftol, iter, mle, minimize_target_ekf);
-		cout<<"Ran in "<<call_counter<<" iterations with return value "<<mle<<endl;
 		
-		cout<<"Parameters are "<<" omega = "<<current_params.get_omega()
-					<<" theta = "<<current_params.get_theta()
-					<<" xi = "<<current_params.get_xi()
-					<<" rho = "<<current_params.get_roe();
 		if(model==VAR_P)
 			cout<<" p = "<<current_params.get_p();
 		cout<<endl<<endl;
@@ -207,7 +202,7 @@ int main(int argc, char** argv) {
 			{
 				solution_improved = true;
 				mark_better_parameters(simulation_counter, 
-					max_simulations,
+					max_simulations, 
 					best_params, 
 					current_params, 
 					log_file, 
@@ -215,10 +210,11 @@ int main(int argc, char** argv) {
 			} 
 			else 
 			{
-				log_file<<"We have NOT found better parameters on simulation # "<<simulation_counter 
-					<< " out of "<< max_simulations <<endl
-					<<"-- new mle = "<< mle <<" old mle = "<<best_params.get_mle()<<endl
-					<<"-- new chi2 = "<<chi2<<" old chi2 = "<<best_params.get_chi2()<<endl
+				log_file<<"We have NOT found better parameters on simulation # "<<simulation_counter << " out of "<< max_simulations <<endl
+					<<"-- new mle                       = "<< current_params.get_mle()  <<" old = "<<best_params.get_mle()<<endl
+					<<"-- new chi2                      = "<<current_params.get_chi2() <<" old = "<<best_params.get_chi2()<<endl
+					<<"-- new kalman chi2               = "<<current_params.get_kalman_chi2()<<" old = "<<best_params.get_kalman_chi2()<<endl
+					<<"-- new mean adjusted kalman chi2 = "<<current_params.get_adjusted_kalman_chi2()<<" old = "<<best_params.get_adjusted_kalman_chi2()<<endl
 					<<"-- Resetting the parameters to the previous best estimate, and then preturbing..."<<endl;
 				current_params.copy_params(best_params);
 			}
