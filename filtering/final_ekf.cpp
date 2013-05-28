@@ -456,7 +456,7 @@ DP minimize_target_ekf(Vec_I_DP & input)
 		|| omega < 0
 		|| xi < 0
 		|| theta < 0
-		|| abs(p) > 3)
+		|| p < 0.25 || p > 2)
 		mle = pow(10.00, 5.00) + rand(); //add a random number to it so it doesn't settle there
 
 	log_parameters(omega, theta, xi, rho, p, mle);
