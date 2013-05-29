@@ -36,7 +36,7 @@ ofstream paramter_file;
 ofstream residual_file;
 ofstream log_file;
 
-DP ftol = 1.00e-7;
+DP ftol = 1.00e-4;
 
 
 void init_log(const VolModel model, const RunMode runmode, ofstream& log_stream);
@@ -197,8 +197,8 @@ int main(int argc, char** argv) {
 			bool solution_improved = false;
 
 			//if(best_params.get_mle() > mle)a
-			//if(best_params.get_chi2() > chi2)
-			if(best_params.get_mle() > mle && best_params.get_kalman_chi2() > current_params.get_kalman_chi2())
+			if(best_params.get_kalman_chi2() > current_params.get_kalman_chi2())
+			//if(best_params.get_mle() > mle && best_params.get_kalman_chi2() > current_params.get_kalman_chi2())
 			{
 				solution_improved = true;
 				mark_better_parameters(simulation_counter, 
