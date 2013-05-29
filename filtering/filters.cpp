@@ -114,15 +114,21 @@ void estimate_ekf_parm_1_dim (
 	{
       if (x<0) 
         x=0.00001;
-	
+	  
+	  /*
+	  Eqn 2.27 pg 121
+	  v[k] =  
+		+ [ omega - rho * xi * muS * v[k-1]^(p - 0.5) - (theta - 0.5 * rho * xi * v[k-1]^(p - 0.5)) * v[k-1] ] * delta_t
+		+ roe * xi * v[k-1]^(p - 0.5) * ln(S[k]/S[K-1]) 
+	  */
       x1 = x 
 		+ (omega - rho*xi*muS*pow(x, p - 0.5) - (theta-0.5*rho*xi*pow(x, p - 0.5)) * x) * delt 
 		+ rho * xi * pow(x, p - 0.5) * (log_stock_prices[i1]-log_stock_prices[i1-1]);
-      
+      //Eqn on page 121
 	  A = 1.0 
 		  - ((rho * xi * muS) * (p - 0.5) * pow(x, p - 1.5) + theta - 0.5 * rho * (p + 0.5) * pow(x, p - 0.5)) * delt
 		  + (p - 0.5) * rho * xi * pow(x, p - 1.5) * (log_stock_prices[i1]-log_stock_prices[i1-1]);
-	  //xi*sqrt((1-rho*rho) * x * delt);
+	  //Eqn on page 121
       W = xi * sqrt((1 - rho * rho) * delt) * pow(x, p);
 
 	  P1 = W*W + A*P*A;
@@ -137,10 +143,10 @@ void estimate_ekf_parm_1_dim (
       z = log_stock_prices[i1+1];
 
       x = x1 + K * (z - (log_stock_prices[i1] + (muS-0.5*x1)*delt)); //KF: measurement updates 2.9
-      u[i1] = z - (log_stock_prices[i1] + (muS-0.5*x1)*delt); //means of observation errors (MPE?)
-      v[i1] = H*P1*H + U*U; //variances of observation errors
-      estimates[i1+1] = log_stock_prices[i1] + (muS-0.5*x1)*delt; //next estimate
-      P=(1.0-K*H)*P1; //KF: P update
+      u[i1] = z - (log_stock_prices[i1] + (muS-0.5*x1)*delt); 
+      v[i1] = H*P1*H + U*U; 
+      estimates[i1+1] = log_stock_prices[i1] + (muS-0.5*x1)*delt; 
+      P=(1.0-K*H)*P1; 
 	}
 }
 
